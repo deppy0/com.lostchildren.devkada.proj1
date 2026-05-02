@@ -1,0 +1,17 @@
+{
+  "name": "com.lostchildren.devkada.proj1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"cd server&&node app.js\" \"cd client&&npm run dev\"",
+    "prod": "cd client&&npm run build&&cd..&&cd server&&set NODE_ENV=production&&node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
