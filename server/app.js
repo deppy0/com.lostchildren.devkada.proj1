@@ -6,7 +6,7 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4', '1.0.0.1']);
 
 /*const database = require('./database');*/
-const supabase = require('./supabase');
+const supabase = require('./database/supabase');
 const express = require('express');
 const cors = require('cors');
 
