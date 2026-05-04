@@ -13,7 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use('/server/example', require('./routes/example'));
+
+app.use('/user', require('./routes/userRoutes'));
 
 if (process.env.NODE_ENV === 'production') {
 	app.use(express.static(path.join(__dirname, '../client/dist')));
