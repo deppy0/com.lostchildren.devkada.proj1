@@ -8,9 +8,7 @@ DROP TABLE IF EXISTS intake_logs CASCADE;
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    hash TEXT NOT NULL,
-    salt TEXT NOT NULL,
-    email CITEXT NOT NULL,
+    email CITEXT UNIQUE NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     guardian_name TEXT,
@@ -28,6 +26,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     doctor_name TEXT,
     date_issued DATE DEFAULT CURRENT_DATE,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );
@@ -65,7 +64,7 @@ CREATE TABLE IF NOT EXISTS schedules (
 CREATE TABLE IF NOT EXISTS intake_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     schedule_id UUID REFERENCES schedules(id) ON DELETE RESTRICT,
-    status TEXT NOT NULL CHECK (status IN ('taken', 'missed', 'skipped')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('taken', 'missed', 'pending')),
     date_scheduled DATE NOT NULL,
     logged_at TIMESTAMPTZ DEFAULT NOW(),
     -- Snapshot of vitals at time of intake if monitored
