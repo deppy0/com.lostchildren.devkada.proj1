@@ -1,8 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../css/Font.css';
 import monimedLogo from '../assets/logoMonimed.svg';
 
 export default function Index() {
+  const nav = useNavigate();
+
+  const goToHome = () => {
+    //auth logic dito
+    nav('/home');
+  };
   return (
     <div className="min-h-screen bg-[#F7F9F9] font-k2d flex flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm flex flex-col items-center">
@@ -58,7 +64,7 @@ export default function Index() {
           </div>
 
           {/* Login Button */}
-          <button className="w-full bg-[#2081C3] hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors mt-2 text-lg hover:cursor-pointer">
+          <button onClick={goToHome} className="w-full bg-[#2081C3] hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors mt-2 text-lg hover:cursor-pointer">
             Login
           </button>
         </div>
