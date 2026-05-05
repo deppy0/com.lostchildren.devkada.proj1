@@ -38,7 +38,7 @@ async function removePrescription(user_id, prescription_id) {
 async function getAllPrescriptions(user_id) {
 	const { data: prescriptions, error: GetError } = await supabase.rpc('get_all_prescriptions', { param_user_id: user_id });
 	if (GetError) throw GetError;
-	return prescriptionsl
+	return prescriptions;
 }
 
 module.exports.addPrescription = addPrescription;
