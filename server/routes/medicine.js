@@ -89,7 +89,7 @@ router.post('/remove', auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;
 		const { medicine_id } = req.body;
-		const success = await medicine_service.removeMedicine(medicine_id);
+		const success = await medicine_service.removeMedicine(user_id, medicine_id);
 		return res.json({ success });
 	} catch (error) {
 		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
