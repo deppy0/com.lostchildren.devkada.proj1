@@ -22,7 +22,7 @@ router.post('/remove', auth, async function(req, res) {
 		await prescription_service.removePrescription(user_id, prescription_id);
 		return res.json({ success: true });
 	} catch (error) {
-		return. res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
 });
 
