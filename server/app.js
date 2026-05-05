@@ -11,12 +11,13 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/server/example', require('./routes/example'));
 app.use('/server/user', require('./routes/userRoutes'));
 app.use('/server/auth', require('./routes/auth'));
+
+app.use('/ocr', require('./routes/ocrRoutes'));
 
 if (process.env.NODE_ENV === 'production') {
 	app.use(express.static(path.join(__dirname, '../client/dist')));
