@@ -19,8 +19,8 @@ router.post('/remove', auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;
 		const { prescription_id } = req.body;
-		await prescription_service.removePrescription(user_id, prescription_id);
-		return res.json({ success: true });
+		const success = await prescription_service.removePrescription(user_id, prescription_id);
+		return res.json({ success });
 	} catch (error) {
 		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
