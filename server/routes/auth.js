@@ -6,7 +6,7 @@ router.post('/login', async function(req, res) {
 		const data = await auth_service.login(req.body.username, req.body.password);
 		return res.json({ data });
 	} catch (error) {
-		return res.status(error.status || 500).json({ error: error.message });
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
 });
 
@@ -22,7 +22,7 @@ router.post('/register', async function(req, res) {
 		);
 		return res.json({ data });
 	} catch (error) {
-		return res.status(error.status || 500).json({ error: error.message });
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
 });
 
@@ -32,7 +32,7 @@ router.post('/logout', auth_service.auth, async function(req, res) {
 		const success = await auth_service.destroy(bearer);
 		return res.json({ success });
 	} catch (error) {
-		return res.status(error.status || 500).json({ error: error.message });
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
 });
 
