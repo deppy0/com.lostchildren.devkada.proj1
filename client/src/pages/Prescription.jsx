@@ -1,6 +1,8 @@
+
 import { useState } from 'react';
 import Nav from './Nav.jsx'; // Assuming Nav is in the same directory
 import '../css/Font.css';
+import '../css/Prescription.css';
 
 export default function Prescription() {
     // Tracks the bottom navigation state
@@ -8,20 +10,75 @@ export default function Prescription() {
     // Tracks the toggle switch state ('current' or 'history')
     const [view, setView] = useState('current');
 
-    // Sample data for the current prescription's medications
-    const currentMeds = [
-        { id: 1, name: 'Cocaine', format: 'tablet #100', instruction: '1 tablet once a day in AM', dosage: '1000mg' },
-        { id: 2, name: 'Cocaine', format: 'tablet #100', instruction: '1 tablet once a day in AM', dosage: '1000mg' },
-        { id: 3, name: 'Cocaine', format: 'tablet #100', instruction: '1 tablet once a day in AM', dosage: '1000mg' },
+    // Sample data for multiple prescriptions with all grouped information
+    const initialPrescriptionsList = [
+        {
+            id: '#1',
+            status: 'Active',
+            doctorName: 'Karin Ann Hernandez-Lim M.D.',
+            department: 'Internal Medicine Nephrology',
+            license: 'No. 110564',
+            ptr: '11049674',
+            dateIssued: 'May 06, 2025',
+            medicines: [
+                { id: 1, name: 'Paracetamol', format: 'tablet #100', instruction: '1 tablet once a day in AM', dosage: '500mg' },
+                { id: 2, name: 'Amoxicillin', format: 'tablet #100', instruction: '1 tablet twice a day', dosage: '250mg' },
+                { id: 3, name: 'Ibuprofen', format: 'tablet #100', instruction: '1 tablet as needed', dosage: '200mg' },
+            ],
+        },
+        {
+            id: '#2',
+            status: 'Active',
+            doctorName: 'Dr. John Martinez M.D.',
+            department: 'Cardiology',
+            license: 'No. 110565',
+            ptr: '11049675',
+            dateIssued: 'May 01, 2025',
+            medicines: [
+                { id: 1, name: 'Metoprolol', format: 'tablet #100', instruction: '1 tablet once a day in AM', dosage: '50mg' },
+                { id: 2, name: 'Lisinopril', format: 'tablet #100', instruction: '1 tablet once a day in PM', dosage: '10mg' },
+            ],
+        },
+        {
+            id: '#3',
+            status: 'Active',
+            doctorName: 'Dr. Maria Santos M.D.',
+            department: 'Dermatology',
+            license: 'No. 110566',
+            ptr: '11049676',
+            dateIssued: 'April 20, 2025',
+            medicines: [
+                { id: 1, name: 'Fluconazole', format: 'capsule #100', instruction: '1 capsule once a day', dosage: '150mg' },
+            ],
+        },
     ];
 
     // Sample data for the history list
-    const historyList = [
+    const initialHistoryList = [
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
     ];
+
+    const [currentPrescriptions, setCurrentPrescriptions] = useState(initialPrescriptionsList);
+    const [historyList, setHistoryList] = useState(initialHistoryList);
+
+    const movePrescriptionToHistory = (prescription) => {
+        setCurrentPrescriptions((previousPrescriptions) =>
+            previousPrescriptions.filter((item) => item.id !== prescription.id)
+        );
+
+        setHistoryList((previousHistory) => [
+            {
+                id: prescription.id,
+                date: prescription.dateIssued,
+                doctor: prescription.doctorName,
+                spec: prescription.department,
+            },
+            ...previousHistory,
+        ]);
+    };
 
     return (
         // Main Container matching your Home.jsx constraints
@@ -35,7 +92,7 @@ export default function Prescription() {
 
                 {/* --- Toggle Switch --- */}
                 <div className="flex justify-center mb-8">
-                    <div className="flex bg-[#E5E7EB] rounded-full border border-gray-400 p-0.5 w-[240px]">
+                    <div className="flex bg-[#E5E7EB] rounded-full border border-gray-400 p-0.5 w-60">
                         <button
                             onClick={() => setView('current')}
                             className={`flex-1 py-1.5 text-sm font-semibold rounded-full transition-colors ${
@@ -65,65 +122,79 @@ export default function Prescription() {
 
                 {/* 1. CURRENT VIEW */}
                 {view === 'current' && (
-                    <div className="bg-[#63D2FF] bg-opacity-80 rounded-[1.5rem] p-5 border border-cyan-200">
+                    <div className="view-content space-y-5">
+                        {currentPrescriptions.map((prescription, idx) => (
+                            <div key={idx} className="bg-[#63D2FF] bg-opacity-80 rounded-3xl p-5 border border-cyan-200">
 
-                        {/* Title & Status */}
-                        <div className="flex justify-between items-start mb-4">
-                            <h2 className="text-2xl font-bold">Prescription #1</h2>
-                            <span className="bg-[#4ADE80] text-white text-xs font-bold px-3 py-1 rounded-full">
-                                Active
-                            </span>
-                        </div>
+                                {/* Title & Status */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <h2 className="text-2xl font-bold">Prescription {prescription.id}</h2>
+                                    {prescription.status === 'Active' ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => movePrescriptionToHistory(prescription)}
+                                            className="text-white text-xs font-bold px-3 py-1 rounded-full bg-[#4ADE80] active:scale-95 transition-transform shadow-sm"
+                                        >
+                                            Active
+                                        </button>
+                                    ) : (
+                                        <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-gray-400">
+                                            {prescription.status}
+                                        </span>
+                                    )}
+                                </div>
 
-                        {/* Doctor Info */}
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <p className="font-semibold text-[15px]">Karin Ann Hernandez-Lim M.D.</p>
-                                <p className="text-xs text-gray-700">Internal Medicine Nephrology</p>
-                            </div>
-                            <div className="text-right text-[10px] leading-tight">
-                                <p><span className="font-semibold">License:</span> No. 110564</p>
-                                <p><span className="font-semibold">PTR:</span> 11049674</p>
-                            </div>
-                        </div>
-
-                        {/* View Picture Button */}
-                        <div className="flex justify-center mb-6">
-                            <button className="bg-[#2081C3] text-white text-sm font-semibold py-2 px-6 rounded-full flex items-center gap-2 shadow-sm active:scale-95 transition-transform">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                View Picture
-                            </button>
-                        </div>
-
-                        {/* Medications List */}
-                        <div className="space-y-3 mb-6">
-                            {currentMeds.map((med, index) => (
-                                <div key={index} className="bg-[#78D5D7] bg-opacity-40 rounded-xl border border-gray-400 overflow-hidden">
-                                    <div className="text-center font-bold text-[15px] py-1 border-b border-gray-400">
-                                        {med.name}
+                                {/* Doctor Info */}
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <p className="font-semibold text-[15px]">{prescription.doctorName}</p>
+                                        <p className="text-xs text-gray-700">{prescription.department}</p>
                                     </div>
-                                    <div className="bg-[#F7F9F9] flex justify-between items-center px-3 py-2 text-[10px]">
-                                        <span className="text-gray-500">{med.format}</span>
-                                        <span className="font-bold text-black text-xs">{med.instruction}</span>
-                                        <span className="text-gray-500">{med.dosage}</span>
+                                    <div className="text-right text-[10px] leading-tight">
+                                        <p><span className="font-semibold">License:</span> {prescription.license}</p>
+                                        <p><span className="font-semibold">PTR:</span> {prescription.ptr}</p>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
 
-                        {/* Footer Date */}
-                        <div className="text-center text-[11px] text-gray-700 mt-4">
-                            Issued: May 06, 2025
-                        </div>
+                                {/* View Picture Button */}
+                                <div className="flex justify-center mb-6">
+                                    <button className="bg-[#2081C3] text-white text-sm font-semibold py-2 px-6 rounded-full flex items-center gap-2 shadow-sm active:scale-95 transition-transform">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        View Picture
+                                    </button>
+                                </div>
+
+                                {/* Medications List */}
+                                <div className="space-y-3 mb-6">
+                                    {prescription.medicines.map((med, index) => (
+                                        <div key={index} className="bg-[#78D5D7] bg-opacity-40 rounded-xl border border-gray-400 overflow-hidden">
+                                            <div className="text-center font-bold text-[15px] py-1 border-b border-gray-400">
+                                                {med.name}
+                                            </div>
+                                            <div className="bg-[#F7F9F9] flex justify-between items-center px-3 py-2 text-[10px]">
+                                                <span className="text-gray-500">{med.format}</span>
+                                                <span className="font-bold text-black text-xs">{med.instruction}</span>
+                                                <span className="text-gray-500">{med.dosage}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Footer Date */}
+                                <div className="text-center text-[11px] text-gray-700 mt-4">
+                                    Issued: {prescription.dateIssued}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
                 {/* 2. HISTORY VIEW */}
                 {view === 'history' && (
-                    <div className="space-y-4">
+                    <div className="view-content space-y-4">
                         {historyList.map((item, index) => (
                             <div key={index} className="bg-[#63D2FF] bg-opacity-70 rounded-2xl p-4 flex flex-col gap-2">
                                 {/* Top Row: ID and Date */}
