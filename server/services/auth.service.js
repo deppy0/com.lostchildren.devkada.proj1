@@ -43,3 +43,4 @@ async function destroy(bearer) {
 module.exports.register = register;
 module.exports.login = login;
 module.exports.auth = auth;
+module.exports.destroy = destroy;

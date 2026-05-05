@@ -10,7 +10,7 @@ async function addPrescription(user_id, doctor_name, date_issued, meds_list) {
 	if (AddError) throw AddError;
 	
 	const { data: new_meds_list, error: QueryError } = await supabase
-		.from('medicines').select('id,taken_after_meals,hourly_gap,max_per_day,start_time_per_day').eq('prescription_id', prescription_id);
+		.from('medicines').select('*').eq('prescription_id', prescription_id);
 	if (QueryError) throw QueryError;
 	
 	const schedules = new_meds_list.map(function(medicine_json) {
@@ -27,15 +27,6 @@ async function addPrescription(user_id, doctor_name, date_issued, meds_list) {
 	return prescription_id;
 }
 
-async function removePrescription(user_id, prescription_id) {
-	const { error: RemoveError } = await supabase.rpc('remove_prescription', {
-		param_user_id: user_id,
-		param_prescription_id: prescription_id,
-	});
-	if (RemoveError) throw RemoveError;
-	return true;
-}
-
 async function getAllPrescriptions(user_id) {
 	const { data: prescriptions, error: GetError } = await supabase.rpc('get_all_prescriptions', { param_user_id: user_id });
 	if (GetError) throw GetError;
@@ -48,7 +39,16 @@ async function getAllActivePrescriptions(user_id) {
 	return active_prescriptions;
 }
 
+async function removePrescription(user_id, prescription_id) {
+	const { error: RemoveError } = await supabase.rpc('remove_prescription', {
+		param_user_id: user_id,
+		param_prescription_id: prescription_id,
+	});
+	if (RemoveError) throw RemoveError;
+	return true;
+}
+
 module.exports.addPrescription = addPrescription;
-module.exports.removePrescription = removePrescription;
 module.exports.getAllPrescriptions = getAllPrescriptions;
 module.exports.getAllActivePrescriptions = getAllActivePrescriptions;
+module.exports.removePrescription = removePrescription;

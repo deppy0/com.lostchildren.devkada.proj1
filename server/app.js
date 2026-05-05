@@ -17,11 +17,16 @@ app.use('/server/example', require('./routes/example'));
 app.use('/server/user', require('./routes/userRoutes'));
 app.use('/server/auth', require('./routes/auth'));
 app.use('/server/prescription', require('./routes/prescription'));
+app.use('/server/medicine', require('./routes/medicine'));
+app.use('/server/schedule', require('./routes/schedule'));
+app.use('/server/vitals', require('./routes/vitals'));
 app.use('/server/ocr', require('./routes/ocrRoutes'));
 
 if (process.env.NODE_ENV === 'production') {
 	app.use(express.static(path.join(__dirname, '../client/dist')));
-	app.get('/*redir', function(req, res) { res.redirect('/'); });
+	app.get('/*redir', function(req, res) {
+		res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+	});
 } else {
 	console.log(process.env.NODE_ENV);
 }
