@@ -74,6 +74,17 @@ router.post('/intake', auth, async function(req, res) {
 	}
 });
 
+router.post('/missed', auth, async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const { schedule_id } = req.body;
+		const json_result = await medicine_service.missedMedicine(user_id, schedule_id);
+		return res.json({ success: true, json_result });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
 router.post('/add-stocks', auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;

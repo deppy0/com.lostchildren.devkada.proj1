@@ -61,6 +61,15 @@ async function intakeMedicine(user_id, schedule_id, intake_type, date_scheduled)
 	return intake_log_id;
 }
 
+async function missedMedicine(user_id, schedule_id) {
+	const { data: json_result, error: FeatureError } = await supabase.rpc('log_medicine_not_taken', {
+		param_user_id: user_id,
+		param_schedule_id: schedule_id,
+	});
+	if (FeatureError) throw FeatureError;
+	return json_result;
+}
+
 async function addMedicineStocks(user_id, medicine_id, add_amount) {
 	const { data: new_total, error: FeatureError } = await supabase.rpc('add_medicine_stocks', {
 		param_user_id: user_id,
@@ -87,5 +96,6 @@ module.exports.getAllActiveMedicines = getAllActiveMedicines;
 module.exports.getAllActiveOTCMedicines = getAllActiveOTCMedicines;
 module.exports.getMedicineWarnedStocks = getMedicineWarnedStocks;
 module.exports.intakeMedicine = intakeMedicine;
+module.exports.missedMedicine = missedMedicine;
 module.exports.addMedicineStocks = addMedicineStocks;
 module.exports.removeMedicine = removeMedicine;
