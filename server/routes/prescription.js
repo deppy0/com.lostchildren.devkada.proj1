@@ -26,4 +26,24 @@ router.post('/remove', auth, async function(req, res) {
 	}
 });
 
+router.post('/get', auth, async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const prescriptions = await prescription_service.getAllPrescriptions(user_id);
+		return res.json({ success: true, prescriptions });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
+router.post('/get-active', auth, async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const prescriptions = await prescription_service.getAllActivePrescriptions(user_id);
+		return res.json({ success: true, prescriptions });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
 module.exports = router;
