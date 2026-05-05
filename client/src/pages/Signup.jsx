@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import '../css/Font.css';
 import pillImage from '../assets/signupBanner.png'
-// import pillsIllustration from '../assets/pillsIllustration.svg'; // Make sure to import your illustration
 
 export default function Signup() {
   return (
