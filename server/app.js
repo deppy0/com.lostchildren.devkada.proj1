@@ -19,6 +19,7 @@ app.use('/server/auth', require('./routes/auth'));
 app.use('/server/prescription', require('./routes/prescription'));
 app.use('/server/medicine', require('./routes/medicine'));
 app.use('/server/schedule', require('./routes/schedule'));
+app.use('/server/vitals', require('./routes/vitals'));
 app.use('/server/ocr', require('./routes/ocrRoutes'));
 
 if (process.env.NODE_ENV === 'production') {
