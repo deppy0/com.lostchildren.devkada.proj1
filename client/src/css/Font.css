@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'K2D';
+  src: url('../fonts/K2D-ExtraLight.ttf') format('truetype');
+  font-weight: 200; 
+
+}
+
+@font-face {
+  font-family: 'K2D';
+  src: url('../fonts/K2D-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'K2D';
+  src: url('../fonts/K2D-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+@theme {
+    --font-k2d: 'K2D', sans-serif;
+}
