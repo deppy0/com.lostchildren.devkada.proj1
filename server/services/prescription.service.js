@@ -23,6 +23,7 @@ async function addPrescription(user_id, doctor_name, date_issued, meds_list) {
 	const errors = responses.filter(function(res) { return res.error });
 	if (errors.length > 0)
 		throw errors;
+	
 	return prescription_id;
 }
 
@@ -41,5 +42,13 @@ async function getAllPrescriptions(user_id) {
 	return prescriptions;
 }
 
+async function getAllActivePrescriptions(user_id) {
+	const { data: active_prescriptions, error: GetError } = await supabase.rpc('get_all_active_prescriptions', { param_user_id: user_id });
+	if (GetError) throw GetError;
+	return active_prescriptions;
+}
+
 module.exports.addPrescription = addPrescription;
 module.exports.removePrescription = removePrescription;
+module.exports.getAllPrescriptions = getAllPrescriptions;
+module.exports.getAllActivePrescriptions = getAllActivePrescriptions;

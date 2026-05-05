@@ -8,5 +8,4 @@ router.get('/information', userService.getUserInformation);
 
 router.post('/update', userService.updateProfile);
 
-router.post('')
 module.exports = router;
