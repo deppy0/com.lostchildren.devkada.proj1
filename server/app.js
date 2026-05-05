@@ -17,8 +17,7 @@ app.use('/server/example', require('./routes/example'));
 app.use('/server/user', require('./routes/userRoutes'));
 app.use('/server/auth', require('./routes/auth'));
 app.use('/server/prescription', require('./routes/prescription'));
-
-app.use('/ocr', require('./routes/ocrRoutes'));
+app.use('/server/ocr', require('./routes/ocrRoutes'));
 
 if (process.env.NODE_ENV === 'production') {
 	app.use(express.static(path.join(__dirname, '../client/dist')));
