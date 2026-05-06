@@ -1,6 +1,8 @@
 const { auth } = require('../services/auth.service.js');
 const prescription_service = require('../services/prescription.service.js');
 const router = require('express').Router();
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/add', auth, async function(req, res) {
 	try {
@@ -10,6 +12,29 @@ router.post('/add', auth, async function(req, res) {
 			return res.status(400).json({ error: 'List of medicines is required for a prescription.' });
 		const prescription_id = await prescription_service.addPrescription(user_id, doctor_name, doc_specialization, date_issued, meds_list);
 		return res.json({ success: true, prescription_id });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
+// API to link an image to an existing prescription
+router.patch('/:id/image', auth, upload.single('image'), async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const prescriptionId = req.params.id;
+		const file = req.file;
+
+		if (!file) return res.status(400).json({ error: 'No image provided.' });
+
+		const publicUrl = await prescription_service.uploadPrescriptionImage(
+			user_id,
+			prescriptionId,
+			file.buffer,
+			file.originalname,
+			file.mimetype
+		);
+
+		return res.json({ success: true, image_url: publicUrl });
 	} catch (error) {
 		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
 	}
