@@ -50,15 +50,7 @@ export default function PatientInfo() {
                     />
                     <span className="absolute right-4 top-3 text-gray-400 text-sm">&#9998;</span>
                 </div>
-
-                <div className="relative">
-                    <label className="text-xs text-gray-500 absolute -top-2 left-3 bg-[#F7F9F9] px-1">Contact Number</label>
-                    <input
-                        type="tel"
-                        className="w-full bg-transparent border border-[#BED8D4] rounded-xl p-3 text-sm outline-none focus:border-[#78D5D7] text-gray-700"
-                    />
-                    <span className="absolute right-4 top-3 text-gray-400 text-sm">&#9998;</span>
-                </div>
+    
             </div>
 
             <h2 className="text-gray-600 text-sm mb-4 mt-6">Meal times</h2>
