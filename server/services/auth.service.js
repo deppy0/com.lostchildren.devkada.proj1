@@ -23,8 +23,7 @@ async function checkToken(token) {
 		throw Error('Invalid auth header');
 	const main_token = token.split(' ')[1];
 	const { data: { user }, error } = await supabase.auth.getUser(main_token);
-	if (error) throw error;
-	return user != null;
+	return !(error || !user);
 }
 
 async function register(email, password, first_name, last_name, guardian_name, guardian_contact) {
@@ -56,6 +55,7 @@ async function destroy(bearer) {
 }
 
 module.exports.auth = auth;
+module.exports.checkToken = checkToken;
 module.exports.register = register;
 module.exports.login = login;
 module.exports.changePassword = changePassword;
