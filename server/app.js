@@ -42,14 +42,14 @@ if (cron) {
       // Uses the 'upcoming_notifications' view
       const { data: pushTasks, error: pushError } = await supabase
         .from('upcoming_notifications')
-        .select('*, users(push_subscription)');
+        .select('*');
 
       if (pushError) {
         console.error('Error fetching upcoming notifications:', pushError);
       } else {
         pushTasks?.forEach(task => {
-          if (task.users?.push_subscription) {
-            sendPushToUser(task.users.push_subscription, task.medicine_name, task.notification_type);
+          if (task.push_subscription) {
+            sendPushToUser(task.push_subscription, task.medicine_name, task.notification_type);
           }
         });
       }
