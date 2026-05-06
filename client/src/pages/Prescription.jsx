@@ -117,37 +117,41 @@ export default function Prescription() {
                 {view === 'current' && (
                     <div className="view-content space-y-5">
                         {currentPrescriptions.map((prescription, idx) => (
-                            <div key={idx} className="bg-[#63D2FF] bg-opacity-80 rounded-3xl p-5 border border-cyan-200">
+                            <div key={idx} className="bg-[#63D2FF] bg-opacity-80 rounded-3xl border border-cyan-200 overflow-hidden">
 
-                                {/* Title & Status */}
-                                <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-2xl font-bold">Prescription {prescription.id}</h2>
-                                    {prescription.status === 'Active' ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => movePrescriptionToHistory(prescription)}
-                                            className="text-white text-xs font-bold px-3 py-1 rounded-full bg-[#4ADE80] active:scale-95 transition-transform shadow-sm"
-                                        >
-                                            Active
-                                        </button>
-                                    ) : (
-                                        <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-gray-400">
-                                            {prescription.status}
-                                        </span>
-                                    )}
+                                <div className="bg-[#86DDF8] px-5 pt-5 pb-4">
+                                    {/* Title & Status */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h2 className="text-2xl font-bold">Prescription {prescription.id}</h2>
+                                        {prescription.status === 'Active' ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => movePrescriptionToHistory(prescription)}
+                                                className="text-white text-xs font-bold px-3 py-1 rounded-full bg-[#4ADE80] active:scale-95 transition-transform shadow-sm"
+                                            >
+                                                Active
+                                            </button>
+                                        ) : (
+                                            <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-gray-400">
+                                                {prescription.status}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Doctor Info */}
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-semibold text-[15px]">{prescription.doctorName}</p>
+                                            <p className="text-xs text-gray-700">{prescription.department}</p>
+                                        </div>
+                                        <div className="text-right text-[10px] leading-tight">
+                                            <p><span className="font-semibold">License:</span> {prescription.license}</p>
+                                            <p><span className="font-semibold">PTR:</span> {prescription.ptr}</p>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Doctor Info */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <p className="font-semibold text-[15px]">{prescription.doctorName}</p>
-                                        <p className="text-xs text-gray-700">{prescription.department}</p>
-                                    </div>
-                                    <div className="text-right text-[10px] leading-tight">
-                                        <p><span className="font-semibold">License:</span> {prescription.license}</p>
-                                        <p><span className="font-semibold">PTR:</span> {prescription.ptr}</p>
-                                    </div>
-                                </div>
+                                <div className="p-5">
 
                                 {/* View Picture Button */}
                                 <div className="flex justify-center mb-6">
@@ -176,9 +180,10 @@ export default function Prescription() {
                                     ))}
                                 </div>
 
-                                {/* Footer Date */}
-                                <div className="text-center text-[11px] text-gray-700 mt-4">
-                                    Issued: {prescription.dateIssued}
+                                    {/* Footer Date */}
+                                    <div className="text-center text-[11px] text-gray-700 mt-4">
+                                        Issued: {prescription.dateIssued}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -189,22 +194,26 @@ export default function Prescription() {
                 {view === 'history' && (
                     <div className="view-content space-y-4">
                         {historyList.map((item, index) => (
-                            <div key={index} className="bg-[#63D2FF] bg-opacity-70 rounded-2xl p-4 flex flex-col gap-2">
-                                {/* Top Row: ID and Date */}
-                                <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                    <span>ID {item.id}</span>
-                                    <span>{item.date}</span>
+                            <div key={index} className="bg-[#63D2FF] bg-opacity-70 rounded-2xl overflow-hidden">
+                                <div className="bg-[#86DDF8] px-4 py-2">
+                                    {/* Top Row: ID and Date */}
+                                    <div className="flex justify-between items-center text-[11px] text-gray-600">
+                                        <span>ID {item.id}</span>
+                                        <span>{item.date}</span>
+                                    </div>
                                 </div>
 
-                                {/* Bottom Row: Doctor Info & Button */}
-                                <div className="flex justify-between items-end mt-1">
-                                    <div>
-                                        <p className="font-bold text-[14px] leading-tight text-black">{item.doctor}</p>
-                                        <p className="text-[10px] text-gray-700">{item.spec}</p>
+                                <div className="p-4">
+                                    {/* Bottom Row: Doctor Info & Button */}
+                                    <div className="flex justify-between items-end mt-1">
+                                        <div>
+                                            <p className="font-bold text-[14px] leading-tight text-black">{item.doctor}</p>
+                                            <p className="text-[10px] text-gray-700">{item.spec}</p>
+                                        </div>
+                                        <button className="bg-[#2081C3] text-white text-xs font-semibold py-1.5 px-4 rounded-full shadow-sm active:scale-95 transition-transform">
+                                            View Picture
+                                        </button>
                                     </div>
-                                    <button className="bg-[#2081C3] text-white text-xs font-semibold py-1.5 px-4 rounded-full shadow-sm active:scale-95 transition-transform">
-                                        View Picture
-                                    </button>
                                 </div>
                             </div>
                         ))}
