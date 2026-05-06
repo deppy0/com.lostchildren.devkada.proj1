@@ -1,3 +1,7 @@
+# External
+postman/
+.postman/
+
 # Logs
 logs
 *.log
