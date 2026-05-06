@@ -1,12 +1,8 @@
-
 import { useState } from 'react';
-import Nav from './Nav.jsx'; // Assuming Nav is in the same directory
 import '../css/Font.css';
 import '../css/Prescription.css';
 
 export default function Prescription() {
-    // Tracks the bottom navigation state
-    const [activeTab, setActiveTab] = useState('prescription');
     // Tracks the toggle switch state ('current' or 'history')
     const [view, setView] = useState('current');
 
@@ -57,8 +53,6 @@ export default function Prescription() {
     const initialHistoryList = [
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
         { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
-        { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
-        { id: '#67', date: 'May 06, 2026', doctor: 'Karin Ann Hernandez-Lim M.D.', spec: 'Internal Medicine Nephrology' },
     ];
 
     const [currentPrescriptions, setCurrentPrescriptions] = useState(initialPrescriptionsList);
@@ -81,7 +75,6 @@ export default function Prescription() {
     };
 
     return (
-        // Main Container matching your Home.jsx constraints
         <div className="max-w-md mx-auto min-h-screen bg-[#F7F9F9] relative pb-32 font-k2d text-gray-900 overflow-x-hidden">
 
             {/* --- Header Section --- */}
@@ -218,10 +211,6 @@ export default function Prescription() {
                     </div>
                 )}
             </div>
-
-            {/* --- Bottom Navigation & FAB --- */}
-            <Nav activeTab={activeTab} setActiveTab={setActiveTab} />
-
         </div>
     );
 }

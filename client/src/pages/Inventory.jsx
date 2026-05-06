@@ -1,11 +1,7 @@
-import { useState } from 'react';
-import Nav from './Nav.jsx';
 import '../css/Home.css';
 import '../css/Font.css';
 
 export default function Inventory() {
-    const [activeTab, setActiveTab] = useState('inventory');
-
     // Array containing the medicine data and their specific color codes
     const inventoryItems = [
         { id: 1, name: 'Biogesic', type: 'Tablet (40mg)', stock: '10', unit: 'in stock', color: 'bg-[#78D5D7]', selected: true },
@@ -18,7 +14,7 @@ export default function Inventory() {
 
     return (
         // Main App Container: Locks to mobile width and viewport height
-        <div className="relative mx-auto w-full max-w-md h-[100dvh] bg-[#F7F9F9] overflow-hidden font-k2d text-gray-900 sm:border sm:border-gray-200 sm:rounded-3xl sm:shadow-2xl sm:h-[850px] sm:my-8">
+        <div className="relative mx-auto w-full max-w-md h-[100dvh] bg-[#F7F9F9] overflow-hidden font-k2d text-gray-900">
 
             {/* Scrollable Content Area */}
             <div className="h-full overflow-y-auto pb-32">
@@ -74,9 +70,6 @@ export default function Inventory() {
                     ))}
                 </div>
             </div>
-
-            {/* Pass activeTab and setActiveTab to Nav */}
-            <Nav activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
     );
 }
