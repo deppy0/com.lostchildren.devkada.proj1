@@ -4,14 +4,14 @@ async function addMedicine(user_id, medicine_json) {
 	const { data: medicine_id, error: AddError } = await supabase.rpc('add_medicine', {
 		param_user_id: user_id,
 		param_medicine_json: medicine_json,
-	});
+	});	
 	if (AddError) throw AddError;
 	
 	const { data: new_medicine_json, error: QueryError } = await supabase
 		.from('medicines').select('*').eq('id', medicine_id).limit(1).single();
 	if (QueryError) throw QueryError;
 	
-	const { error: ScheduleError } = await supabase.rpc('add_med_schedule', {
+	const { error: ScheduleError } = await supabase.rpc('add_medicine_schedule', {
 		param_user_id: user_id,
 		param_medicine_json: new_medicine_json,
 	});
