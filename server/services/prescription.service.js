@@ -50,7 +50,68 @@ async function removePrescription(user_id, prescription_id) {
 	return true;
 }
 
+async function uploadPrescriptionImage(user_id, prescriptionId, fileBuffer, originalName, mimeType) {
+	// Verify prescription belongs to user
+	const { data: prescription, error: fetchError } = await supabase
+		.from('prescriptions')
+		.select('id')
+		.eq('id', prescriptionId)
+		.eq('user_id', user_id)
+		.single();
+
+	if (fetchError || !prescription) {
+		const err = new Error('Prescription not found or does not belong to this user.');
+		err.status = 404;
+		throw err;
+	}
+
+	const fileExt = originalName.split('.').pop();
+	const fileName = `${prescriptionId}.${fileExt}`;
+
+	// Upload file to storage
+	const { data: storageData, error: storageError } = await supabase.storage
+		.from('prescriptions')
+		.upload(fileName, fileBuffer, {
+			contentType: mimeType,
+			upsert: true,
+		});
+
+	if (storageError) {
+		const err = new Error(`Storage upload failed: ${storageError.message}`);
+		err.status = 500;
+		throw err;
+	}
+
+	// Get public URL
+	const { data: publicData } = supabase.storage
+		.from('prescriptions')
+		.getPublicUrl(fileName);
+
+	const publicUrl = publicData?.publicUrl;
+	if (!publicUrl) {
+		const err = new Error('Failed to generate public URL.');
+		err.status = 500;
+		throw err;
+	}
+
+	// Update database with image URL
+	const { error: dbError } = await supabase
+		.from('prescriptions')
+		.update({ image_url: publicUrl })
+		.eq('id', prescriptionId)
+		.eq('user_id', user_id);
+
+	if (dbError) {
+		const err = new Error(`Database update failed: ${dbError.message}`);
+		err.status = 500;
+		throw err;
+	}
+
+	return publicUrl;
+}
+
 module.exports.addPrescription = addPrescription;
 module.exports.getAllPrescriptions = getAllPrescriptions;
 module.exports.getAllActivePrescriptions = getAllActivePrescriptions;
 module.exports.removePrescription = removePrescription;
+module.exports.uploadPrescriptionImage = uploadPrescriptionImage;
