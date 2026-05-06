@@ -26,6 +26,17 @@ router.post('/register', async function(req, res) {
 	}
 });
 
+router.post('/change-password', async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const { new_password } = req.body;
+		const success = await auth_service.changePassword(user_id, new_password);
+		return res.json({ success });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
 router.post('/logout', auth_service.auth, async function(req, res) {
 	try {
 		const bearer = req.headers.authorization.split(' ')[1];

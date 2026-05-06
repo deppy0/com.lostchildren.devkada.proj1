@@ -5,10 +5,10 @@ const router = require('express').Router();
 router.post('/add', auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;
-		const { doctor_name, date_issued, meds_list } = req.body;
+		const { doctor_name, doc_specialization, date_issued, meds_list } = req.body;
 		if (!meds_list || !Array.isArray(meds_list) || meds_list.length < 1)
 			return res.status(400).json({ error: 'List of medicines is required for a prescription.' });
-		const prescription_id = await prescription_service.addPrescription(user_id, doctor_name, date_issued, meds_list);
+		const prescription_id = await prescription_service.addPrescription(user_id, doctor_name, doc_specialization, date_issued, meds_list);
 		return res.json({ success: true, prescription_id });
 	} catch (error) {
 		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
