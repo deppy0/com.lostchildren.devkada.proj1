@@ -1,0 +1,25 @@
+/* Smooth fade-in animation for toggle view switching */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.view-content {
+    animation: fadeInUp 0.4s ease-in-out;
+}
+
+/* Smooth transition for the toggle buttons */
+.toggle-button {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Smooth transition for background color change */
+.toggle-background {
+    transition: background-color 0.3s ease-in-out;
+}
