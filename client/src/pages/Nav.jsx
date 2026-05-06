@@ -6,14 +6,14 @@ import prescriptionIcon from '../assets/prescriptionIcon.svg';
 import inventoryIcon from '../assets/inventoryIcon.svg';
 import profileIcon from '../assets/profileIcon.svg';
 
-// Helper component moved outside to avoid re-creation on render
+// Helper component reverted to standard styling
 const ActionButton = ({ title, fullWidth }) => (
     <button
         className={`bg-[#63D2FF] bg-opacity-80 hover:bg-opacity-100 rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-colors ${
             fullWidth ? 'col-span-2' : ''
         }`}
     >
-        {/* Placeholder for the inner icon circle */}
+        {/* Standard inner icon circle */}
         <div className="w-12 h-12 rounded-full bg-[#BED8D4] bg-opacity-70"></div>
         <span className="text-[#F7F9F9] text-sm font-medium font-k2d text-center leading-tight">
             {title}
@@ -46,7 +46,7 @@ export default function Nav({ activeTab }) {
             {/* --- Main Expanding Nav Container --- */}
             <nav
                 className={`fixed bottom-0 w-full max-w-md mx-auto inset-x-0 bg-[#2081C3] rounded-t-[2.5rem] transition-all duration-500 ease-in-out z-50 flex flex-col shadow-2xl ${
-                    fabOpen ? 'h-[65vh]' : 'h-24'
+                    fabOpen ? 'h-[70vh]' : 'h-24'
                 }`}
             >
                 {/* 1. Closed State: Navigation Icons */}
@@ -74,11 +74,15 @@ export default function Nav({ activeTab }) {
 
                 {/* 2. Open State: FAB Menu Content */}
                 <div
-                    className={`w-full h-full pt-10 px-6 transition-all duration-500 ease-in-out ${
+                    className={`w-full h-full pt-8 px-6 transition-all duration-500 ease-in-out overflow-y-auto pb-24 ${
                         fabOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
                     }`}
                 >
                     <div className="grid grid-cols-2 gap-4 w-full">
+                        {/* Updated Button: Standard styling, spans both columns */}
+                        <ActionButton title="Take Medicine" fullWidth />
+
+                        {/* Standard Actions */}
                         <ActionButton title="Add Medicine" />
                         <ActionButton title="Update BP" />
                         <ActionButton title="Scan Prescription" fullWidth />
