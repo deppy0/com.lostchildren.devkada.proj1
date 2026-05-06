@@ -9,6 +9,13 @@ export default function AppLayout() {
         if (path.includes('health')) return 'health';
         if (path.includes('prescription')) return 'prescription';
         if (path.includes('inventory')) return 'inventory';
+        if (
+            path.includes('/profile/patient') ||
+            path.includes('/profile/caregiver') ||
+            path.includes('/profile/password') ||
+            path.includes('/profile/notification') ||
+            path.includes('/profile/privacy')
+        ) return 'profile';
         if (path.includes('profile')) return 'profile';
         return 'home';
     };

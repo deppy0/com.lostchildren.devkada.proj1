@@ -5,10 +5,10 @@ import pillImage from '../assets/signupBanner.png'
 export default function Signup() {
   return (
     <div className="min-h-screen bg-[#F7F9F9] font-k2d flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm flex flex-col">
+      <div className="w-full max-w-sm flex flex-col relative">
         
         {/* Back Button */}
-        <div className="absolute top-8 left-10 text-[#2081C3] hover:opacity-80 transition-opacity">
+        <div className="absolute top-0 left-0 text-[#2081C3] hover:opacity-80 transition-opacity">
           <Link to="/" className="text-[#2081C3] hover:opacity-80 transition-opacity">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -21,7 +21,7 @@ export default function Signup() {
           <img 
             src={pillImage} 
             alt="Medical Pills" 
-            className="w-[250px] h-auto object-contain"
+            className="w-62.5 h-auto object-contain"
           />
         </div>
 

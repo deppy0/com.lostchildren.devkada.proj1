@@ -144,10 +144,6 @@ export default function Prescription() {
                                             <p className="font-semibold text-[15px]">{prescription.doctorName}</p>
                                             <p className="text-xs text-gray-700">{prescription.department}</p>
                                         </div>
-                                        <div className="text-right text-[10px] leading-tight">
-                                            <p><span className="font-semibold">License:</span> {prescription.license}</p>
-                                            <p><span className="font-semibold">PTR:</span> {prescription.ptr}</p>
-                                        </div>
                                     </div>
                                 </div>
 

@@ -9,6 +9,12 @@ import AppLayout from './pages/AppLayout.jsx';
 import Home from './pages/Home.jsx';
 import Inventory from './pages/Inventory.jsx';
 import Prescription from './pages/Prescription.jsx';
+import Profile from './pages/Profile.jsx';
+import PatientInfo from './pages/Patient-Info.jsx';
+import CaregiverInfo from './pages/Caregiver-Info.jsx';
+import ChangePassword from './pages/Change-Password.jsx';
+import NotificationSettings from './pages/Notification-Settings.jsx';
+import Privacy from './pages/Privacy.jsx';
 
 // Define the routing structure
 const router = createBrowserRouter([
@@ -37,6 +43,30 @@ const router = createBrowserRouter([
 				element: <Prescription />,
 			},
 			// You can add /health and /profile here later
+			{
+				path: '/profile',
+				element: <Profile />,
+			},
+			{
+				path: '/profile/patient',
+				element: <PatientInfo />,
+			},
+			{
+				path: '/profile/caregiver',
+				element: <CaregiverInfo />,
+			},
+			{
+				path: '/profile/password',
+				element: <ChangePassword />,
+			},
+			{
+				path: '/profile/notification',
+				element: <NotificationSettings />,
+			},
+			{
+				path: '/profile/privacy',
+				element: <Privacy />,
+			},
 		],
 	},
 ]);
