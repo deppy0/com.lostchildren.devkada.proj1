@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Reusable Menu Item Component
@@ -20,6 +20,48 @@ function MenuItem({ icon, label, actionIcon, onClick }) {
 
 export default function Profile() {
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchUserInfo = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                
+                if (!token || !user?.id) {
+                    setError('No auth token or user ID found');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch('/server/user/information', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'x-user-id': user.id,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user information');
+                }
+
+                const data = await response.json();
+                console.log('User data received:', data);
+                setUserInfo(data);
+            } catch (err) {
+                console.error('Error fetching user info:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserInfo();
+    }, []);
 
     // SVGs for Icons
     const Icons = {
@@ -69,6 +111,30 @@ export default function Profile() {
         navigate(path);
     };
 
+    const handleLogout = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                await fetch('/server/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+            }
+            // Clear localStorage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            navigate('/');
+        } catch (err) {
+            console.error('Logout error:', err);
+            // Still navigate to login even if logout fails
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            navigate('/');
+        }
+    };
+
     return (
         <div className="w-full min-h-full bg-[#F7F9F9] font-k2d">
 
@@ -81,8 +147,20 @@ export default function Profile() {
                 {/* Profile Details */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="w-28 h-28 bg-[#d1d5db] rounded-full mb-3 opacity-50"></div>
-                    <h2 className="text-lg font-semibold text-black">Kurt Anjo Laguerta</h2>
-                    <p className="text-xs text-gray-500 font-light tracking-wider">09676767676</p>
+                    {loading ? (
+                        <p className="text-sm text-gray-500">Loading profile...</p>
+                    ) : error ? (
+                        <p className="text-sm text-red-500">{error}</p>
+                    ) : (
+                        <>
+                            <h2 className="text-lg font-semibold text-black">
+                                {userInfo?.user?.first_name || 'User'} {userInfo?.user?.last_name || ''}
+                            </h2>
+                            <p className="text-xs text-gray-500 font-light tracking-wider">
+                                {userInfo?.user?.email || 'No email'}
+                            </p>
+                        </>
+                    )}
                 </div>
 
                 {/* Profile Information Section */}
@@ -101,7 +179,7 @@ export default function Profile() {
                     <div className="bg-[#BED8D4] rounded-2xl p-3 shadow-sm">
                         <MenuItem icon={Icons.bell} label="Notification" actionIcon={Icons.chevron} onClick={() => goToPage('/profile/notification')} />
                         <MenuItem icon={Icons.question} label="Privacy" actionIcon={Icons.chevron} onClick={() => goToPage('/profile/privacy')} />
-                        <MenuItem icon={Icons.logout} label="Logout" actionIcon={Icons.chevron} />
+                        <MenuItem icon={Icons.logout} label="Logout" actionIcon={Icons.chevron} onClick={handleLogout} />
                     </div>
                 </div>
             </div>
