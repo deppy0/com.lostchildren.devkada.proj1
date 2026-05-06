@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+
+.progress-circle {
+    transition: stroke-dashoffset 1.0s ease-out;
+}
