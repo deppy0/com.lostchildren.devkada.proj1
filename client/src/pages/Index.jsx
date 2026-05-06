@@ -1,14 +1,53 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Font.css';
 import monimedLogo from '../assets/logoMonimed.svg';
 
 export default function Index() {
   const nav = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const goToHome = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    //auth logic dito
-    nav('/home');
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/server/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || 'Login failed. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Store the auth token in localStorage
+      if (result.data?.session?.access_token) {
+        localStorage.setItem('authToken', result.data.session.access_token);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
+      }
+
+      nav('/home');
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="min-h-screen bg-[#F7F9F9] font-k2d flex flex-col items-center justify-center px-6 py-12">
@@ -29,6 +68,13 @@ export default function Index() {
         {/* Form Container */}
         <div className="w-full mt-8 space-y-4">
           
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          
           {/* Email Input */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -39,6 +85,8 @@ export default function Index() {
             <input
               type="email"
               placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#2081C3] focus:ring-1 focus:ring-[#2081C3] transition-colors"
             />
           </div>
@@ -53,6 +101,8 @@ export default function Index() {
             <input
               type="password"
               placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#2081C3] focus:ring-1 focus:ring-[#2081C3] transition-colors"
             />
           </div>
@@ -65,8 +115,12 @@ export default function Index() {
           </div>
 
           {/* Login Button */}
-          <button onClick={goToHome} className="w-full bg-[#2081C3] hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors mt-2 text-lg hover:cursor-pointer">
-            Login
+          <button 
+            onClick={handleLogin} 
+            disabled={loading}
+            className="w-full bg-[#2081C3] hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3.5 rounded-xl transition-colors mt-2 text-lg hover:cursor-pointer disabled:cursor-not-allowed"
+          >
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </div>
 
