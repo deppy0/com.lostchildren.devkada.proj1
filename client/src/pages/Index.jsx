@@ -50,8 +50,9 @@ export default function Index() {
     }
   };
   return (
-    <div className="min-h-screen bg-[#F7F9F9] font-k2d flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm flex flex-col items-center">
+    <div className="w-full max-w-md mx-auto min-h-[100dvh] bg-[#F7F9F9] relative overflow-hidden font-k2d sm:border sm:border-gray-200 sm:rounded-3xl sm:shadow-2xl sm:h-[850px] sm:my-8">
+      <div className="h-full overflow-y-auto flex flex-col items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm flex flex-col items-center">
         
         {/* Logo Section */}
 		<img src={monimedLogo} className="w-50 h-50" alt="Monimed"></img>
@@ -147,6 +148,7 @@ export default function Index() {
           Not register yet ? <Link to = "/signup" className="text-gray-900 font-semibold hover:underline">Create Account</Link>
         </div>
 
+        </div>
       </div>
     </div>
   );
