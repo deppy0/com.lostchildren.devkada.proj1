@@ -3,7 +3,7 @@ const router = require('express').Router();
 
 router.post('/login', async function(req, res) {
 	try {
-		const data = await auth_service.login(req.body.username, req.body.password);
+		const data = await auth_service.login(req.body.email, req.body.password);
 		return res.json({ data });
 	} catch (error) {
 		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
