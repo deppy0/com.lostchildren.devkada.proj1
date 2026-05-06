@@ -1,11 +1,7 @@
-import { useState } from 'react';
-import Nav from './Nav.jsx';
 import '../css/Home.css';
 import '../css/Font.css';
 
 export default function Home() {
-    const [activeTab, setActiveTab] = useState('home');
-
     // Sample data to make rendering cleaner
     const weekDays = [
         { day: 'Mon', date: '4', active: true },
@@ -127,9 +123,6 @@ export default function Home() {
                     </div>
                 ))}
             </div>
-
-            {/* Pass activeTab and setActiveTab to Nav */}
-            <Nav activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
     );
 }

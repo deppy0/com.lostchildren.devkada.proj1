@@ -5,7 +5,8 @@ import monimedLogo from '../assets/logoMonimed.svg';
 export default function Index() {
   const nav = useNavigate();
 
-  const goToHome = () => {
+  const goToHome = (e) => {
+    e.preventDefault();
     //auth logic dito
     nav('/home');
   };

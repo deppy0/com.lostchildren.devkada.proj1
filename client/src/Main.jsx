@@ -1,23 +1,48 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+// Import your components
 import Index from './pages/Index.jsx';
 import Signup from './pages/Signup.jsx';
+import AppLayout from './pages/AppLayout.jsx';
 import Home from './pages/Home.jsx';
+import Inventory from './pages/Inventory.jsx';
 import Prescription from './pages/Prescription.jsx';
-//import Inventory from './pages/Inventory.jsx';
 
-const Router = createHashRouter([
-	// { path: '/', element: <Index /> },
-	// { path: '/signup', element: <Signup />},
-	// { path: '/home', element: <Home /> },
-	{ path: '/', element: <Prescription />},
-	//{ path: '/', element: <Inventory /> },
-	{ path: '*', element: <Navigate to='/' replace /> },
+// Define the routing structure
+const router = createBrowserRouter([
+	{
+		path: '/',
+		element: <Index />, // Login page is the default route
+	},
+	{
+		path: '/signup',
+		element: <Signup />,
+	},
+	{
+		// AppLayout wraps all authenticated routes so they share the Nav bar
+		element: <AppLayout />,
+		children: [
+			{
+				path: '/home',
+				element: <Home />,
+			},
+			{
+				path: '/inventory',
+				element: <Inventory />,
+			},
+			{
+				path: '/prescription',
+				element: <Prescription />,
+			},
+			// You can add /health and /profile here later
+		],
+	},
 ]);
 
 createRoot(document.getElementById('main')).render(
 	<StrictMode>
-		<RouterProvider router={Router} />
+		<RouterProvider router={router} />
 	</StrictMode>
 );

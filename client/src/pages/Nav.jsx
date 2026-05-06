@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import homeIcon from '../assets/homeIcon.svg';
 import healthIcon from '../assets/healthIcon.svg';
 import prescriptionIcon from '../assets/prescriptionIcon.svg';
@@ -20,8 +21,17 @@ const ActionButton = ({ title, fullWidth }) => (
     </button>
 );
 
-export default function Nav({ activeTab, setActiveTab }) {
+export default function Nav({ activeTab }) {
     const [fabOpen, setFabOpen] = useState(false);
+
+    // Initialize the navigation hook
+    const navigate = useNavigate();
+
+    // Helper function to handle routing and close the FAB menu if it was open
+    const handleNavigation = (path) => {
+        navigate(path);
+        setFabOpen(false);
+    };
 
     return (
         <>
@@ -45,19 +55,19 @@ export default function Nav({ activeTab, setActiveTab }) {
                         fabOpen ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 delay-200 translate-y-0'
                     }`}
                 >
-                    <button onClick={() => setActiveTab('home')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'home' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
+                    <button onClick={() => handleNavigation('/home')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'home' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
                         <img src={homeIcon} alt="Home" className="w-8 h-8" />
                     </button>
-                    <button onClick={() => setActiveTab('health')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'health' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
+                    <button onClick={() => handleNavigation('/health')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'health' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
                         <img src={healthIcon} alt="Health" className="w-8 h-8" />
                     </button>
-                    <button onClick={() => setActiveTab('prescription')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'prescription' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
+                    <button onClick={() => handleNavigation('/prescription')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'prescription' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
                         <img src={prescriptionIcon} alt="Prescription" className="w-8 h-8" />
                     </button>
-                    <button onClick={() => setActiveTab('inventory')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'inventory' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
+                    <button onClick={() => handleNavigation('/inventory')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'inventory' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
                         <img src={inventoryIcon} alt="Inventory" className="w-8 h-8" />
                     </button>
-                    <button onClick={() => setActiveTab('profile')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'profile' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
+                    <button onClick={() => handleNavigation('/profile')} className={`p-3 rounded-2xl transition-colors duration-300 ${activeTab === 'profile' ? 'bg-[#78D5D7]' : 'bg-transparent'}`}>
                         <img src={profileIcon} alt="Profile" className="w-8 h-8" />
                     </button>
                 </div>
