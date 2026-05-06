@@ -18,6 +18,14 @@ async function auth(req, res, next) {
 	}
 }
 
+async function checkToken(token) {
+	if (!token || !token.startsWith('Bearer '))
+		throw Error('Invalid auth header');
+	const main_token = token.split(' ')[1];
+	const { data: { user }, error } = await supabase.auth.getUser(main_token);
+	if (error) throw error;
+	return user != null;
+}
 
 async function register(email, password, first_name, last_name, guardian_name, guardian_contact) {
 	const { data, error } = await supabase.auth.signUp({
