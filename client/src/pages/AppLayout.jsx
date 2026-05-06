@@ -18,7 +18,7 @@ export default function AppLayout() {
     console.log('Current path:', location.pathname); // Debug
 
     return (
-        <div className="max-w-md mx-auto min-h-[100dvh] bg-[#F7F9F9] relative overflow-hidden font-k2d sm:border sm:border-gray-200 sm:rounded-3xl sm:shadow-2xl sm:h-[850px] sm:my-8">
+        <div className="w-full max-w-md mx-auto min-h-[100dvh] bg-[#F7F9F9] relative overflow-hidden font-k2d sm:border sm:border-gray-200 sm:rounded-3xl sm:shadow-2xl sm:h-[850px] sm:my-8">
             <div className="h-full overflow-y-auto">
                 <Outlet />
             </div>

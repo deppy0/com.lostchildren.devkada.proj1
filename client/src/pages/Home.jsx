@@ -163,7 +163,7 @@ export default function Home() {
                         {/* Top Row: Info & Actions */}
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg border border-[#2081C3] transition-colors duration-300 ${med.status === 'taken' ? 'bg-[#2081C3]' : med.status === 'missed' ? 'bg-red-400 border-red-500' : 'bg-[#BED8D4]'}`}></div>
+                                <div className={`w-10 h-10 rounded-lg border border-[#2081C3] transition-colors duration-300 ${med.status === 'taken' ? 'bg-[#2081C3]' : med.status === 'not_taken' ? 'bg-red-400 border-red-500' : med.iconColor}`}></div>
                                 <div>
                                     <h3 className="text-2xl font-k2d font-semibold leading-none text-[#000000]">{med.name}</h3>
                                     <p className="text-sm font-k2d font-extralight text-gray-700">{med.instruction}</p>

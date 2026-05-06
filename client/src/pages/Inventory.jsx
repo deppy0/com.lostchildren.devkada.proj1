@@ -2,14 +2,14 @@ import '../css/Home.css';
 import '../css/Font.css';
 
 export default function Inventory() {
-    // Array containing the medicine data and their specific color codes
+    // Array updated with a wider variety of pastel colors
     const inventoryItems = [
-        { id: 1, name: 'Biogesic', type: 'Tablet (40mg)', stock: '10', unit: 'in stock', color: 'bg-[#78D5D7]', selected: true },
-        { id: 2, name: 'Meth', type: 'Powder (40mg)', stock: '400 mg', unit: 'in stock', color: 'bg-[#BED8D4]' },
-        { id: 3, name: 'Amoxicillin', type: 'Capsule', stock: '15', unit: 'in stock', color: 'bg-[#A8E6E1]' },
-        { id: 4, name: 'Vitamin C', type: 'Tablet (500mg)', stock: '30', unit: 'in stock', color: 'bg-[#C8E9E8]' },
-        { id: 5, name: 'Ibuprofen', type: 'Tablet (200mg)', stock: '12', unit: 'in stock', color: 'bg-[#7FD8D8]' },
-        { id: 6, name: 'Lisinopril', type: 'Tablet (10mg)', stock: '5', unit: 'in stock', color: 'bg-[#B3E5FC]' },
+        { id: 1, name: 'Biogesic', type: 'Tablet (40mg)', stock: '10', unit: 'in stock', color: 'bg-[#FFB3BA]', selected: true }, // Pastel Pink
+        { id: 2, name: 'Meth', type: 'Powder (40mg)', stock: '400 mg', unit: 'in stock', color: 'bg-[#FFDFBA]' }, // Pastel Peach
+        { id: 3, name: 'Amoxicillin', type: 'Capsule', stock: '15', unit: 'in stock', color: 'bg-[#FFFFBA]' }, // Pastel Yellow
+        { id: 4, name: 'Vitamin C', type: 'Tablet (500mg)', stock: '30', unit: 'in stock', color: 'bg-[#BAFFC9]' }, // Pastel Mint Green
+        { id: 5, name: 'Ibuprofen', type: 'Tablet (200mg)', stock: '12', unit: 'in stock', color: 'bg-[#BAE1FF]' }, // Pastel Blue
+        { id: 6, name: 'Lisinopril', type: 'Tablet (10mg)', stock: '5', unit: 'in stock', color: 'bg-[#E8B2FF]' }, // Pastel Lilac
     ];
 
     return (
