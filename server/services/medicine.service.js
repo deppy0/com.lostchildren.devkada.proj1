@@ -80,6 +80,16 @@ async function addMedicineStocks(user_id, medicine_id, add_amount) {
 	return new_total;
 }
 
+async function subtractMedicineStocks(user_id, medicine_id, subtract_amount) {
+	const { data: new_total, error: FeatureError } = await supabase.rpc('subtract_medicine_stocks', {
+		param_user_id: user_id,
+		param_medicine_id: medicine_id,
+		param_add_amount: add_amount,
+	});
+	if (FeatureError) throw FeatureError;
+	return new_total;
+}
+
 async function removeMedicine(user_id, medicine_id) {
 	const { error: RemoveError } = await supabase.rpc('remove_medicine', {
 		param_user_id: user_id,
@@ -98,4 +108,5 @@ module.exports.getMedicineWarnedStocks = getMedicineWarnedStocks;
 module.exports.intakeMedicine = intakeMedicine;
 module.exports.missedMedicine = missedMedicine;
 module.exports.addMedicineStocks = addMedicineStocks;
+module.exports.subtractMedicineStocks = subtractMedicineStocks;
 module.exports.removeMedicine = removeMedicine;

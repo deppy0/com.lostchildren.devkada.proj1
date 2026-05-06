@@ -96,6 +96,17 @@ router.post('/add-stocks', auth, async function(req, res) {
 	}
 });
 
+router.post('/subtract-stocks', auth, async function(req, res) {
+	try {
+		const user_id = req.user.id;
+		const { medicine_id, subtract_amount } = req.body;
+		const new_total = await medicine_service.subtractMedicineStocks(user_id, medicine_id, subtract_amount);
+		return res.json({ success: true, new_total });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
 router.post('/remove', auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;
