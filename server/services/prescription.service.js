@@ -1,11 +1,12 @@
 const supabase = require('../database/supabase');
 
-async function addPrescription(user_id, doctor_name, doc_specialization, date_issued, meds_list) {
+async function addPrescription(user_id, doctor_name, doc_specialization, date_issued, document_url, meds_list) {
 	const { data: prescription_id, error: AddError } = await supabase.rpc('add_prescription', {
 		param_user_id: user_id,
 		param_doctor_name: doctor_name,
 		param_doc_specialization: doc_specialization,
 		param_date_issued: date_issued,
+		param_document_url: document_url,
 		param_meds_list: meds_list,
 	});
 	if (AddError) throw AddError;
