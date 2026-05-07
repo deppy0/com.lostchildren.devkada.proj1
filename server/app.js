@@ -23,6 +23,7 @@ app.use('/server/prescription', require('./routes/prescription'));
 app.use('/server/medicine', require('./routes/medicine'));
 app.use('/server/schedule', require('./routes/schedule'));
 app.use('/server/vitals', require('./routes/vitals'));
+app.use('/server/log', require('./routes/log'));
 app.use('/server/ocr', require('./routes/ocrRoutes'));
 app.use('/server/notifications', require('./routes/notificationRoutes'));
 
