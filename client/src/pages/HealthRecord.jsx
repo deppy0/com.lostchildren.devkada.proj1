@@ -6,7 +6,7 @@ const API_BASE_URL = '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
 });
 
 // Reusing the BP Status logic from your Nav to color-code the history list
@@ -115,12 +115,13 @@ export default function HealthRecord() {
             }
         } catch (error) {
             console.error("Error fetching vitals:", error);
+            // Updated dummy data to match 'logged_at' column name
             setHistory([
-                { id: 1, systolic: 122, diastolic: 82, heart_bpm: 74, created_at: new Date(Date.now() - 86400000 * 0).toISOString() },
-                { id: 2, systolic: 126, diastolic: 84, heart_bpm: 76, created_at: new Date(Date.now() - 86400000 * 1).toISOString() },
-                { id: 3, systolic: 118, diastolic: 79, heart_bpm: 71, created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-                { id: 4, systolic: 130, diastolic: 88, heart_bpm: 82, created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
-                { id: 5, systolic: 120, diastolic: 80, heart_bpm: 72, created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
+                { id: 1, systolic: 122, diastolic: 82, heart_bpm: 74, logged_at: new Date(Date.now() - 86400000 * 0).toISOString() },
+                { id: 2, systolic: 126, diastolic: 84, heart_bpm: 76, logged_at: new Date(Date.now() - 86400000 * 1).toISOString() },
+                { id: 3, systolic: 118, diastolic: 79, heart_bpm: 71, logged_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+                { id: 4, systolic: 130, diastolic: 88, heart_bpm: 82, logged_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+                { id: 5, systolic: 120, diastolic: 80, heart_bpm: 72, logged_at: new Date(Date.now() - 86400000 * 4).toISOString() },
             ]);
         } finally {
             setLoading(false);
@@ -234,15 +235,21 @@ export default function HealthRecord() {
                             ) : (
                                 history.map((record, idx) => {
                                     const recordStatus = getBPStatus(record.systolic, record.diastolic);
-                                    const dateObj = new Date(record.created_at);
-                                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+                                    // Parse logged_at from the database safely
+                                    const dateObj = record.logged_at ? new Date(record.logged_at) : null;
+                                    const isValidDate = dateObj && !isNaN(dateObj.getTime());
+
+                                    const displayMonth = isValidDate ? dateObj.toLocaleDateString('en-US', { month: 'short' }) : '---';
+                                    const displayDay = isValidDate ? dateObj.getDate() : '-';
+                                    const timeStr = isValidDate ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '--:--';
 
                                     return (
                                         <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:border-[#63D2FF] transition-colors">
                                             {/* Left: Date & Time */}
                                             <div className="flex flex-col items-center justify-center bg-[#F7F9F9] w-14 h-14 rounded-xl border border-gray-200 shrink-0">
-                                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest leading-none mb-1">{dateObj.toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                <span className="text-lg font-bold text-[#2081C3] leading-none">{dateObj.getDate()}</span>
+                                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest leading-none mb-1">{displayMonth}</span>
+                                                <span className="text-lg font-bold text-[#2081C3] leading-none">{displayDay}</span>
                                             </div>
 
                                             {/* Middle: Stats */}

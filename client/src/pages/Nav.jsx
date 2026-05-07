@@ -10,7 +10,7 @@ const API_BASE_URL = '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
 });
 
 const dayMap = {
