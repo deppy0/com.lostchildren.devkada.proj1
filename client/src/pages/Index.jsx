@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Font.css';
 import monimedLogo from '../assets/logoMonimed.svg';
@@ -8,7 +8,47 @@ export default function Index() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/server/auth/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // User is authenticated, redirect to home
+          console.log('success');
+          nav('/home');
+        } else {
+          // Token is invalid, clear it
+          console.log('token is invalid');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('user');
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [nav]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,10 +75,10 @@ export default function Index() {
         return;
       }
 
-      // Store the auth token in localStorage
+      // Store the auth token in sessionStorage
       if (result.data?.session?.access_token) {
-        localStorage.setItem('authToken', result.data.session.access_token);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
+        sessionStorage.setItem('authToken', result.data.session.access_token);
+        sessionStorage.setItem('user', JSON.stringify(result.data.user));
       }
 
       nav('/home');

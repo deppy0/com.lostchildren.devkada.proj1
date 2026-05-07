@@ -15,6 +15,7 @@ import CaregiverInfo from './pages/Caregiver-Info.jsx';
 import ChangePassword from './pages/Change-Password.jsx';
 import NotificationSettings from './pages/Notification-Settings.jsx';
 import Privacy from './pages/Privacy.jsx';
+import HealthRecord from "./pages/HealthRecord.jsx";
 
 if ('serviceWorker' in navigator) {
 	window.addEventListener('load', () => {
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
 				element: <Prescription />,
 			},
 			// You can add /health and /profile here later
+			{
+				path: '/health',
+				element: <HealthRecord />,
+			},
 			{
 				path: '/profile',
 				element: <Profile />,

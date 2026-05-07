@@ -50,11 +50,11 @@ async function getMedicineWarnedStocks(user_id) {
 	return warned_stocks;
 }
 
-async function intakeMedicine(user_id, schedule_id, intake_type, date_scheduled) {
+async function intakeMedicine(user_id, schedule_id, status, date_scheduled) {
 	const { data: intake_log_id, error: FeatureError } = await supabase.rpc('intake_medicine', {
 		param_user_id: user_id,
 		param_schedule_id: schedule_id,
-		param_intake_type: intake_type,
+		param_intake_type: status,
 		param_date_scheduled: date_scheduled,
 	});
 	if (FeatureError) throw FeatureError;
@@ -84,7 +84,7 @@ async function subtractMedicineStocks(user_id, medicine_id, subtract_amount) {
 	const { data: new_total, error: FeatureError } = await supabase.rpc('subtract_medicine_stocks', {
 		param_user_id: user_id,
 		param_medicine_id: medicine_id,
-		param_add_amount: add_amount,
+		param_subtract_amount: subtract_amount,
 	});
 	if (FeatureError) throw FeatureError;
 	return new_total;

@@ -35,7 +35,7 @@ router.post('/register', async function(req, res) {
 	}
 });
 
-router.post('/change-password', async function(req, res) {
+router.post('/change-password', auth_service.auth, async function(req, res) {
 	try {
 		const user_id = req.user.id;
 		const { new_password } = req.body;
