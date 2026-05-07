@@ -4,6 +4,49 @@ const { GoogleGenAI } = require('@google/genai');
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+const ai2 = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_2 });
+
+function extractJsonFromResponse(responseText) {
+    if (!responseText) throw new Error('Empty response from Gemini');
+
+    let trimmed = responseText.trim();
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        trimmed = trimmed.slice(1, -1);
+    }
+
+    try {
+        return JSON.parse(trimmed);
+    } catch (parseErr) {
+        const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error('Could not parse JSON from Gemini response: ' + parseErr.message);
+    }
+}
+
+async function generatePrescriptionJson(client, prompt) {
+    const response = await client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+            {
+                role: 'user',
+                parts: [{ text: prompt }]
+            }
+        ]
+    });
+
+    // compatible extraction for different SDK response shapes
+    let text = typeof response.text === 'string' ? response.text : undefined;
+    if (!text) {
+        // fallback: some SDKs put generated content in candidates
+        const cand = response?.candidates?.[0];
+        text = cand?.message?.content?.[0]?.text || cand?.content?.[0]?.text || cand?.text;
+    }
+
+    return extractJsonFromResponse(text);
+}
+
 /**
  * Parse a prescription image buffer using Gemini-3-Flash and return structured JSON.
  * The image is not stored; it's encoded and submitted only in the request payload.
@@ -43,46 +86,16 @@ JSON Template:
 Here is the image payload (base64):\n${base64}`;
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [{ text: prompt }]
-                }
-            ]
-        });
-
-        // compatible extraction for different SDK response shapes
-        let text = typeof response.text === 'string' ? response.text : undefined;
-        if (!text) {
-            // fallback: some SDKs put generated content in candidates
-            const cand = response?.candidates?.[0];
-            text = cand?.message?.content?.[0]?.text || cand?.content?.[0]?.text || cand?.text;
-        }
-
-        if (!text) throw new Error('Empty response from Gemini');
-
-        let trimmed = text.trim();
-        if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-            trimmed = trimmed.slice(1, -1);
-        }
-
-        // Ensure the model returned JSON; try to parse
-        try {
-            const parsed = JSON.parse(trimmed);
-            return parsed;
-        } catch (parseErr) {
-            // If not valid JSON, attempt to extract the first JSON object in the text
-            const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
-            }
-            throw new Error('Could not parse JSON from Gemini response: ' + parseErr.message);
-        }
+        return await generatePrescriptionJson(ai, prompt);
     } catch (err) {
-        console.error('Gemini OCR error:', err.message || err);
-        throw err;
+        console.warn('Primary Gemini OCR failed, retrying with backup:', err.message || err);
+
+        try {
+            return await generatePrescriptionJson(ai2, prompt);
+        } catch (backupErr) {
+            console.error('Gemini OCR error:', backupErr.message || backupErr);
+            throw backupErr;
+        }
     }
 }
 
