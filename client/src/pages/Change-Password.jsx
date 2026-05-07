@@ -38,8 +38,8 @@ export default function ChangePassword() {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('authToken');
-            const userString = localStorage.getItem('user');
+            const token = sessionStorage.getItem('authToken');
+            const userString = sessionStorage.getItem('user');
             
             if (!token) {
                 setError('Not authenticated. Please login first.');
@@ -103,7 +103,7 @@ export default function ChangePassword() {
                 
                 // Logout user after password change
                 try {
-                    const token = localStorage.getItem('authToken');
+                    const token = sessionStorage.getItem('authToken');
                     await fetch('/server/auth/logout', {
                         method: 'POST',
                         headers: {
@@ -115,9 +115,9 @@ export default function ChangePassword() {
                     console.error('Logout error:', err);
                 }
                 
-                // Clear localStorage and redirect to login
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('user');
+                // Clear sessionStorage and redirect to login
+                sessionStorage.removeItem('authToken');
+                sessionStorage.removeItem('user');
                 
                 // Redirect after showing success message
                 setTimeout(() => {

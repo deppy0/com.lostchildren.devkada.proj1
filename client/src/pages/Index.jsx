@@ -14,7 +14,7 @@ export default function Index() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = sessionStorage.getItem('authToken');
         if (!token) {
           setLoading(false);
           return;
@@ -37,8 +37,8 @@ export default function Index() {
         } else {
           // Token is invalid, clear it
           console.log('token is invalid');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('user');
           setLoading(false);
         }
       } catch (err) {
@@ -75,10 +75,10 @@ export default function Index() {
         return;
       }
 
-      // Store the auth token in localStorage
+      // Store the auth token in sessionStorage
       if (result.data?.session?.access_token) {
-        localStorage.setItem('authToken', result.data.session.access_token);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
+        sessionStorage.setItem('authToken', result.data.session.access_token);
+        sessionStorage.setItem('user', JSON.stringify(result.data.user));
       }
 
       nav('/home');
