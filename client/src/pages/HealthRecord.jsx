@@ -103,19 +103,24 @@ export default function HealthRecord() {
 
     const fetchVitalsHistory = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/vitals/get`, {
+            const response = await fetch(`${API_BASE_URL}/log/vitals`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({})
             });
 
             const data = await response.json();
-            if (response.ok && data.success && data.vitals) {
-                setHistory(data.vitals);
+            if (response.ok && data.success && data.vitals_list) {
+                const cleanVitals = data.vitals_list.filter(record =>
+                    record !== null &&
+                    record !== undefined &&
+                    record.systolic
+                );
+
+                setHistory(cleanVitals);
             }
         } catch (error) {
             console.error("Error fetching vitals:", error);
-            // Updated dummy data to match 'logged_at' column name
             setHistory([
                 { id: 1, systolic: 122, diastolic: 82, heart_bpm: 74, logged_at: new Date(Date.now() - 86400000 * 0).toISOString() },
                 { id: 2, systolic: 126, diastolic: 84, heart_bpm: 76, logged_at: new Date(Date.now() - 86400000 * 1).toISOString() },
