@@ -6,17 +6,44 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone"],
   "orientation": "portrait-primary",
   "theme_color": "#2081C3",
   "background_color": "#F7F9F9",
   "categories": ["health", "medical"],
   "icons": [
     {
-      "src": "/Monimed.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/icons/Monimed-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/Monimed-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/Monimed-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/iphone_xr.png",
+      "sizes": "828x1792",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "MoniMed Dashboard"
+    },
+    {
+      "src": "/screenshots/laptop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "MoniMed Onboarding"
     }
   ],
   "prefer_related_applications": false
