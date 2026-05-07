@@ -27,8 +27,8 @@ export default function Profile() {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const token = localStorage.getItem('authToken');
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const token = sessionStorage.getItem('authToken');
+                const user = JSON.parse(sessionStorage.getItem('user') || '{}');
                 
                 if (!token || !user?.id) {
                     setError('No auth token or user ID found');
@@ -113,7 +113,7 @@ export default function Profile() {
 
     const handleLogout = async () => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = sessionStorage.getItem('authToken');
             if (token) {
                 await fetch('/server/auth/logout', {
                     method: 'POST',
@@ -122,15 +122,15 @@ export default function Profile() {
                     },
                 });
             }
-            // Clear localStorage
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
+            // Clear sessionStorage
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('user');
             navigate('/');
         } catch (err) {
             console.error('Logout error:', err);
             // Still navigate to login even if logout fails
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('user');
             navigate('/');
         }
     };
