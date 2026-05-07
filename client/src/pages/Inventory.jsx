@@ -1,16 +1,117 @@
+import { useState, useEffect } from 'react';
 import '../css/Home.css';
 import '../css/Font.css';
 
+const API_BASE_URL = '/server';
+
+const getAuthHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+});
+
 export default function Inventory() {
-    // Array updated with a wider variety of pastel colors
-    const inventoryItems = [
-        { id: 1, name: 'Biogesic', type: 'Tablet (40mg)', stock: '10', unit: 'in stock', color: 'bg-[#FFB3BA]', selected: true }, // Pastel Pink
-        { id: 2, name: 'Meth', type: 'Powder (40mg)', stock: '400 mg', unit: 'in stock', color: 'bg-[#FFDFBA]' }, // Pastel Peach
-        { id: 3, name: 'Amoxicillin', type: 'Capsule', stock: '15', unit: 'in stock', color: 'bg-[#FFFFBA]' }, // Pastel Yellow
-        { id: 4, name: 'Vitamin C', type: 'Tablet (500mg)', stock: '30', unit: 'in stock', color: 'bg-[#BAFFC9]' }, // Pastel Mint Green
-        { id: 5, name: 'Ibuprofen', type: 'Tablet (200mg)', stock: '12', unit: 'in stock', color: 'bg-[#BAE1FF]' }, // Pastel Blue
-        { id: 6, name: 'Lisinopril', type: 'Tablet (10mg)', stock: '5', unit: 'in stock', color: 'bg-[#E8B2FF]' }, // Pastel Lilac
-    ];
+    const [inventoryItems, setInventoryItems] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Modal State
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [subtractAmount, setSubtractAmount] = useState('1');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // 1. Fetch inventory on mount
+    const fetchInventory = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/medicine/get`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({})
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success && data.medicines) {
+                setInventoryItems(data.medicines);
+            }
+        } catch (error) {
+            console.error("Error fetching inventory:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchInventory();
+    }, []);
+
+    // 2. Open the Slide Modal
+    const handleOpenModal = (e, item) => {
+        e.stopPropagation(); // Prevents clicking the card background
+        if ((item.stock_remaining || 0) <= 0) return;
+
+        setSelectedItem(item);
+        setSubtractAmount('1'); // Reset to default 1 when opening
+    };
+
+    // 3. Confirm and Send to Backend
+    const handleConfirmSubtract = async () => {
+        if (!selectedItem) return;
+
+        const amountToSubtract = parseInt(subtractAmount, 10);
+        const currentStock = selectedItem.stock_remaining || 0;
+
+        if (isNaN(amountToSubtract) || amountToSubtract <= 0) {
+            alert("Please enter a valid number greater than 0.");
+            return;
+        }
+
+        if (amountToSubtract > currentStock) {
+            alert(`You cannot subtract ${amountToSubtract}. You only have ${currentStock} left in stock.`);
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        // Optimistic UI update for instant feedback
+        setInventoryItems(prevItems =>
+            prevItems.map(item =>
+                item.id === selectedItem.id
+                    ? { ...item, stock_remaining: item.stock_remaining - amountToSubtract }
+                    : item
+            )
+        );
+
+        // Send the exact amount to the backend
+        try {
+            const response = await fetch(`${API_BASE_URL}/medicine/subtract-stocks`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    medicine_id: selectedItem.id,
+                    subtract_amount: amountToSubtract
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                // Revert on failure
+                fetchInventory();
+                throw new Error(data.error || "Failed to subtract stock");
+            }
+
+            // Close modal on success
+            setSelectedItem(null);
+        } catch (error) {
+            console.error("Error subtracting stock:", error);
+            alert(`Could not subtract stock: ${error.message}`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Filter items based on search
+    const filteredInventory = inventoryItems.filter(item =>
+        item.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Get today's date formatted nicely for the header
+    const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
     return (
         // Main App Container: Locks to mobile width and viewport height
@@ -21,7 +122,7 @@ export default function Inventory() {
 
                 {/* --- Header Section --- */}
                 <div className="bg-[#2081C3] pt-12 pb-8 px-6 rounded-b-[2rem] shadow-sm">
-                    <p className="text-white/80 text-sm font-k2d font-extralight mb-1">Monday, May 4</p>
+                    <p className="text-white/80 text-sm font-k2d font-extralight mb-1">{todayFormatted}</p>
                     <h1 className="text-white text-[2.5rem] font-k2d font-semibold mb-6 tracking-wide leading-none">
                         Inventory
                     </h1>
@@ -30,6 +131,8 @@ export default function Inventory() {
                     <div className="relative">
                         <input
                             type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search for Medicine"
                             className="w-full bg-[#F7F9F9] text-gray-700 rounded-full py-3 px-6 outline-none focus:ring-2 focus:ring-[#63D2FF] shadow-inner placeholder-gray-400 text-sm font-k2d"
                         />
@@ -38,36 +141,114 @@ export default function Inventory() {
 
                 {/* --- Inventory Grid --- */}
                 <div className="p-6 grid grid-cols-2 gap-x-4 gap-y-6">
-                    {inventoryItems.map((item) => (
-                        <div key={item.id} className="flex flex-col cursor-pointer group">
-
-                            {/* Top Colored Card Section */}
-                            <div
-                                className={`${item.color} rounded-2xl p-4 flex flex-col items-center justify-center h-36 transition-transform duration-200 group-hover:scale-[1.02] border border-[#2081C3] ${
-                                    item.selected ? 'ring-2 ring-[#63D2FF] ring-offset-2 ring-offset-[#F7F9F9]' : ''
-                                }`}
-                            >
-                                {/* Dark Gray Circle Placeholder for Icon/Image */}
-                                <div className="w-14 h-14 rounded-full bg-gray-500/80 mb-3"></div>
-                                <span className="text-xl font-k2d font-semibold text-gray-800 leading-none mb-1">
-                                    {item.stock}
-                                </span>
-                                <span className="text-[10px] font-k2d font-extralight text-gray-500 uppercase tracking-wider">
-                                    {item.unit}
-                                </span>
-                            </div>
-
-                            {/* Bottom Text Details */}
-                            <div className="pt-2 px-1">
-                                <h3 className="font-k2d font-semibold text-gray-900 text-lg leading-tight mb-0.5">
-                                    {item.name}
-                                </h3>
-                                <p className="text-[11px] font-k2d font-extralight text-gray-500">
-                                    {item.type}
-                                </p>
-                            </div>
+                    {filteredInventory.length === 0 ? (
+                        <div className="col-span-2 text-center text-gray-500 py-8 font-k2d font-light">
+                            No medicines found in inventory.
                         </div>
-                    ))}
+                    ) : (
+                        filteredInventory.map((item) => (
+                            <div key={item.id} className="flex flex-col cursor-pointer group">
+
+                                {/* Top Colored Card Section */}
+                                <div
+                                    className={`relative ${item.color || 'bg-[#FFDFBA]'} rounded-2xl p-4 flex flex-col items-center justify-center h-36 transition-transform duration-200 group-hover:scale-[1.02] border border-[#2081C3]`}
+                                >
+                                    {/* Subtract Quantity Button */}
+                                    <button
+                                        onClick={(e) => handleOpenModal(e, item)}
+                                        disabled={(item.stock_remaining || 0) <= 0}
+                                        className="absolute top-2 right-2 w-7 h-7 bg-white/40 hover:bg-white/70 active:bg-white border border-[#2081C3]/30 rounded-full flex items-center justify-center text-[#2081C3] font-bold text-lg pb-1 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                                        title="Subtract specific amount"
+                                    >
+                                        -
+                                    </button>
+
+                                    {/* Dark Gray Circle Placeholder for Icon/Image */}
+                                    <div className="w-14 h-14 rounded-full bg-gray-500/80 mb-3"></div>
+                                    <span className="text-xl font-k2d font-semibold text-gray-800 leading-none mb-1">
+                                        {item.stock_remaining || 0}
+                                    </span>
+                                    <span className="text-[10px] font-k2d font-extralight text-gray-500 uppercase tracking-wider">
+                                        in stock
+                                    </span>
+                                </div>
+
+                                {/* Bottom Text Details */}
+                                <div className="pt-2 px-1">
+                                    <h3 className="font-k2d font-semibold text-gray-900 text-lg leading-tight mb-0.5 capitalize">
+                                        {item.name}
+                                    </h3>
+                                    <p className="text-[11px] font-k2d font-extralight text-gray-500 capitalize">
+                                        {item.medicine_type || 'Unknown'} {item.strength ? `(${item.strength})` : ''}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* ========================================== */}
+            {/* SLIDING MODAL UI (Matches Nav.jsx exactly) */}
+            {/* ========================================== */}
+
+            {/* Modal Overlay Background */}
+            <div
+                className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 ${selectedItem ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setSelectedItem(null)}
+            />
+
+            {/* Modal Container */}
+            <div className={`fixed bottom-0 inset-x-0 w-full max-w-md mx-auto bg-white rounded-t-3xl z-[1001] transition-transform duration-500 ease-in-out shadow-[0_-10px_40px_rgba(0,0,0,0.2)] flex flex-col ${
+                selectedItem ? 'translate-y-0' : 'translate-y-full'
+            }`}>
+
+                {/* Modal Header */}
+                <div className={`w-full flex justify-center pt-5 pb-5 rounded-t-3xl relative bg-[#2081C3] text-white`}>
+                    <div className="w-12 h-1.5 bg-white/50 rounded-full absolute top-3"></div>
+                    <button
+                        onClick={() => setSelectedItem(null)}
+                        className="absolute right-4 top-3 w-10 h-10 bg-[#78D5D7] border-2 border-[#BED8D4] rounded-full flex items-center justify-center shadow-lg text-[#F7F9F9] hover:scale-105 active:scale-95 transition-all z-10 hover:cursor-pointer"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 flex flex-col gap-4 font-k2d pb-10 bg-[#F7F9F9]">
+                    <div>
+                        <h2 className="text-2xl font-semibold text-[#2081C3] capitalize">{selectedItem?.name}</h2>
+                        <p className="text-sm text-gray-500 font-semibold">
+                            Current Stock: <span className="text-gray-800">{selectedItem?.stock_remaining}</span>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 mt-2">
+                        <label className="text-sm text-gray-500 font-semibold pl-1">Amount to Subtract</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max={selectedItem?.stock_remaining}
+                            value={subtractAmount}
+                            onChange={(e) => setSubtractAmount(e.target.value)}
+                            placeholder="e.g. 1 or 5"
+                            className="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 font-semibold focus:outline-none focus:border-[#2081C3] shadow-sm"
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleConfirmSubtract}
+                        disabled={isSubmitting || !subtractAmount || parseInt(subtractAmount, 10) <= 0 || parseInt(subtractAmount, 10) > selectedItem?.stock_remaining}
+                        className={`w-full py-4 mt-6 rounded-xl shadow-lg transition-all text-lg font-semibold ${
+                            subtractAmount && parseInt(subtractAmount, 10) > 0 && parseInt(subtractAmount, 10) <= selectedItem?.stock_remaining
+                                ? 'bg-[#2081C3] text-white active:scale-95 hover:cursor-pointer'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        {isSubmitting ? 'Updating...' : 'Confirm Subtraction'}
+                    </button>
                 </div>
             </div>
         </div>
