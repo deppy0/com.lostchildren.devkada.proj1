@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Font.css';
 import pillImage from '../assets/signupBanner.png'
+import { apiFetch } from '../lib/api';
 
 export default function Signup() {
   const nav = useNavigate();
@@ -46,7 +47,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const response = await fetch('/server/auth/register', {
+      const response = await apiFetch('/server/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

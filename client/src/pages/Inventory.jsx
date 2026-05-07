@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import '../css/Home.css';
 import '../css/Font.css';
+import { apiFetch, API_BASE } from '../lib/api';
 
 // Import icons from assets folder
 import capsuleIcon from '../assets/capsule_icon.png';
@@ -10,7 +11,7 @@ import tabletIcon from '../assets/tablet_icon.png';
 import syrupIcon from '../assets/syrup_icon.png';
 import powderIcon from '../assets/powder_icon.png';
 
-const API_BASE_URL = '/server';
+const API_BASE_URL = API_BASE || '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export default function Inventory() {
     // 1. Fetch inventory on mount (wrapped in useCallback to fix ESLint warning)
     const fetchInventory = useCallback(async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/medicine/get`, {
+            const response = await apiFetch('/server/medicine/get', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({})
@@ -146,7 +147,7 @@ export default function Inventory() {
 
         // Send the exact amount to the backend
         try {
-            const response = await fetch(`${API_BASE_URL}/medicine/subtract-stocks`, {
+            const response = await apiFetch('/server/medicine/subtract-stocks', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({

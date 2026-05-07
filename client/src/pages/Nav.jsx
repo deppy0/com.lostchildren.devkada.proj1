@@ -5,8 +5,9 @@ import healthIcon from '../assets/healthIcon.svg';
 import prescriptionIcon from '../assets/prescriptionIcon.svg';
 import inventoryIcon from '../assets/inventoryIcon.svg';
 import profileIcon from '../assets/profileIcon.svg';
+import { apiFetch, API_BASE } from '../lib/api';
 
-const API_BASE_URL = '/server';
+const API_BASE_URL = API_BASE || '/server';
 
 // ==========================================
 // SMART AUTH HELPERS
@@ -232,7 +233,7 @@ function TakeMedicineView({ closeModal }) {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/medicine/get`, {
+        apiFetch('/server/medicine/get', {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({})
@@ -255,7 +256,7 @@ function TakeMedicineView({ closeModal }) {
     const handleLogIntake = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/server/medicine/subtract-stocks', {
+            const response = await apiFetch('/server/medicine/subtract-stocks', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -346,7 +347,7 @@ function AddMedicineView({ closeModal }) {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetch('/server/medicine/get', {
+        apiFetch('/server/medicine/get', {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({})
@@ -363,7 +364,7 @@ function AddMedicineView({ closeModal }) {
     const handleAddStocks = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/server/medicine/add-stocks', {
+            const response = await apiFetch('/server/medicine/add-stocks', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -464,7 +465,7 @@ function AddMedicationView({ closeModal }) {
     const handleSaveSchedule = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/server/medicine/add', {
+            const response = await apiFetch('/server/medicine/add', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -610,7 +611,7 @@ function UpdateBPView({ closeModal }) {
     const handleSaveVitals = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/vitals/record`, {
+            const response = await apiFetch('/server/vitals/record', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -761,10 +762,10 @@ function AddPrescriptionView({ closeModal, initialData }) {
             const user = getUser();
             if (!user?.id) return;
 
-            fetch('/server/user/information', {
-                method: 'GET',
-                headers: { ...getAuthHeaders(), 'x-user-id': user.id }
-            })
+                    apiFetch('/server/user/information', {
+                        method: 'GET',
+                        headers: { ...getAuthHeaders(), 'x-user-id': user.id }
+                    })
                 .then(res => {
                     if (!res.ok) throw new Error(`Server returned ${res.status}`);
                     return res.json();
@@ -858,7 +859,7 @@ function AddPrescriptionView({ closeModal, initialData }) {
                     : (med.takenAtMeals ? 'Take with meals' : 'Take as directed')
             }));
 
-            const response = await fetch(`${API_BASE_URL}/prescription/add`, {
+            const response = await apiFetch('/server/prescription/add', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -877,7 +878,7 @@ function AddPrescriptionView({ closeModal, initialData }) {
                 const formData = new FormData();
                 formData.append('image', prescriptionImage);
 
-                const imageResponse = await fetch(`${API_BASE_URL}/prescription/${data.prescription_id}/image`, {
+                const imageResponse = await apiFetch(`/server/prescription/${data.prescription_id}/image`, {
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${getToken()}` },
                     body: formData
@@ -1141,7 +1142,7 @@ function ScanPrescriptionView({ closeModal, onScanComplete }) {
         try {
             const base64Data = previewUrl.split(',')[1];
 
-            const response = await fetch('/server/ocr/parse', {
+            const response = await apiFetch('/server/ocr/parse', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ image_base64: base64Data })

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 
 // Reusable Menu Item Component
@@ -36,7 +37,7 @@ export default function Profile() {
                     return;
                 }
 
-                const response = await fetch('/server/user/information', {
+                const response = await apiFetch('/server/user/information', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ export default function Profile() {
         try {
             const token = localStorage.getItem('authToken');
             if (token) {
-                await fetch('/server/auth/logout', {
+                await apiFetch('/server/auth/logout', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

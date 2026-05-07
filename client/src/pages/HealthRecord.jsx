@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import '../css/Home.css';
 import '../css/Font.css';
+import { apiFetch, API_BASE } from '../lib/api';
 
-const API_BASE_URL = '/server';
+const API_BASE_URL = API_BASE || '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ export default function HealthRecord() {
 
     const fetchVitalsHistory = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/log/vitals`, {
+            const response = await apiFetch('/server/log/vitals', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({})

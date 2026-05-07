@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import { Link } from 'react-router-dom';
 
 export default function PatientInfo() {
@@ -27,7 +28,7 @@ export default function PatientInfo() {
                     return;
                 }
 
-                const response = await fetch('/server/user/information', {
+                const response = await apiFetch('/server/user/information', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export default function PatientInfo() {
                 return;
             }
 
-            const response = await fetch('/server/user/update', {
+            const response = await apiFetch('/server/user/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

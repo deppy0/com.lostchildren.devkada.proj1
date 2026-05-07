@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function ChangePassword() {
@@ -63,7 +64,7 @@ export default function ChangePassword() {
             }
 
             // Verify old password by attempting to login with retrieved email and old password
-            const loginResponse = await fetch('/server/auth/login', {
+            const loginResponse = await apiFetch('/server/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export default function ChangePassword() {
             }
 
             // Old password verified, now change the password
-            const response = await fetch('/server/auth/change-password', {
+            const response = await apiFetch('/server/auth/change-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +105,7 @@ export default function ChangePassword() {
                 // Logout user after password change
                 try {
                     const token = localStorage.getItem('authToken');
-                    await fetch('/server/auth/logout', {
+                    await apiFetch('/server/auth/logout', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

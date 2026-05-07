@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import '../css/Home.css';
 import '../css/Font.css';
+import { apiFetch, API_BASE } from '../lib/api';
 
-const API_BASE_URL = '/server';
+const API_BASE_URL = API_BASE || '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -80,12 +81,12 @@ export default function Home() {
     const fetchSchedule = async () => {
         try {
             const [scheduleResponse, inventoryResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/schedule/today`, {
+                apiFetch('/server/schedule/today', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ date: displayDateString })
                 }),
-                fetch(`${API_BASE_URL}/medicine/get`, {
+                apiFetch('/server/medicine/get', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({})
@@ -209,7 +210,7 @@ export default function Home() {
         if (!targetMed || targetMed.status !== 'pending') return;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/medicine/intake`, {
+            const res = await apiFetch('/server/medicine/intake', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
@@ -223,7 +224,7 @@ export default function Home() {
             if (!res.ok || !data.success) throw new Error(data.error || "Failed to log status");
 
             if (newStatus === 'taken') {
-                await fetch(`${API_BASE_URL}/medicine/subtract-stocks`, {
+                await apiFetch('/server/medicine/subtract-stocks', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ medicine_id: targetMed.medicine_id, subtract_amount: 1 })

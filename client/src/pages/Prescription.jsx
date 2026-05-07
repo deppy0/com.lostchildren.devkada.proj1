@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../css/Font.css';
 import '../css/Prescription.css';
+import { apiFetch } from '../lib/api';
 
 export default function Prescription() {
     const [view, setView] = useState('current');
@@ -27,9 +28,9 @@ export default function Prescription() {
 
             // FIX 2: Fetch all required data concurrently instead of looping, which prevents N+1 query crashes
             const [activeRes, allRes, medsRes] = await Promise.all([
-                fetch('/server/prescription/get-active', { method: 'POST', headers }),
-                fetch('/server/prescription/get', { method: 'POST', headers }),
-                fetch('/server/medicine/get', { method: 'POST', headers, body: JSON.stringify({}) }) // Added empty body for strict POST routes
+                apiFetch('/server/prescription/get-active', { method: 'POST', headers }),
+                apiFetch('/server/prescription/get', { method: 'POST', headers }),
+                apiFetch('/server/medicine/get', { method: 'POST', headers, body: JSON.stringify({}) }) // Added empty body for strict POST routes
             ]);
 
             const activeData = await activeRes.json();
@@ -71,7 +72,7 @@ export default function Prescription() {
             const token = getToken();
 
             // Call your backend /remove endpoint to archive/delete it
-            const res = await fetch('/server/prescription/remove', {
+            const res = await apiFetch('/server/prescription/remove', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import '../css/Font.css';
 import monimedLogo from '../assets/logoMonimed.svg';
@@ -20,7 +21,7 @@ export default function Index() {
           return;
         }
 
-        const response = await fetch('/server/auth/check', {
+        const response = await apiFetch('/server/auth/check', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,7 +57,7 @@ export default function Index() {
     setLoading(true);
 
     try {
-      const response = await fetch('/server/auth/login', {
+      const response = await apiFetch('/server/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
