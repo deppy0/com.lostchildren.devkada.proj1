@@ -1,6 +1,15 @@
 const auth_service = require('../services/auth.service.js');
 const router = require('express').Router();
 
+router.post('/check', async function(req, res) {
+	try {
+		const success = await auth_service.checkToken(req.headers.authorization);
+		return res.json({ success });
+	} catch (error) {
+		return res.status(error.status || 500).json({ error: error.message || 'Unexpected error' });
+	}
+});
+
 router.post('/login', async function(req, res) {
 	try {
 		const data = await auth_service.login(req.body.email, req.body.password);
