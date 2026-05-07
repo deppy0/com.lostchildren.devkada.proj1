@@ -6,7 +6,7 @@ const API_BASE_URL = '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
 });
 
 // Reusing the BP Status logic from your Nav to color-code the history list
@@ -111,11 +111,16 @@ export default function HealthRecord() {
 
             const data = await response.json();
             if (response.ok && data.success && data.vitals_list) {
-                setHistory(data.vitals_list);
+                const cleanVitals = data.vitals_list.filter(record =>
+                    record !== null &&
+                    record !== undefined &&
+                    record.systolic
+                );
+
+                setHistory(cleanVitals);
             }
         } catch (error) {
             console.error("Error fetching vitals:", error);
-            // Updated dummy data to map to logged_at as a fallback
             setHistory([
                 { id: 1, systolic: 122, diastolic: 82, heart_bpm: 74, logged_at: new Date(Date.now() - 86400000 * 0).toISOString() },
                 { id: 2, systolic: 126, diastolic: 84, heart_bpm: 76, logged_at: new Date(Date.now() - 86400000 * 1).toISOString() },
