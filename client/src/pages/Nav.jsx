@@ -30,21 +30,72 @@ const getAuthHeaders = () => ({
     'Authorization': `Bearer ${getToken()}`
 });
 
-const ActionButton = ({ title, fullWidth, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`bg-[#63D2FF] bg-opacity-80 hover:bg-opacity-100 rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-colors hover:cursor-pointer active:scale-95 duration-200 ${
-            fullWidth ? 'col-span-2' : ''
-        }`}
-    >
-        <div className="w-12 h-12 rounded-full bg-[#BED8D4] bg-opacity-70 flex items-center justify-center text-[#2081C3] font-bold text-xl">
-            {title === 'Scan Prescription' ? '📷' : title === 'Take Medicine' ? '💊' : '+'}
-        </div>
-        <span className="text-[#F7F9F9] text-sm font-medium font-k2d text-center leading-tight">
-            {title}
-        </span>
-    </button>
-);
+const ActionButton = ({ title, fullWidth, onClick }) => {
+    // Helper to return the correct SVG icon based on the button title
+    const getIcon = (title) => {
+        switch (title) {
+            case 'Take Medicine':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a4.5 4.5 0 00-6.364 0l-6.364 6.364a4.5 4.5 0 000 6.364 4.5 4.5 0 006.364 0l6.364-6.364a4.5 4.5 0 000-6.364z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.818 9.182l6.364 6.364" />
+                    </svg>
+                );
+            case 'Add Medicine':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 14.5v-6.5" />
+                    </svg>
+                );
+            case 'Update BP':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5h4.5l1.5-3 3 7.5 1.5-3h4.5" />
+                    </svg>
+                );
+            case 'Scan Prescription':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                    </svg>
+                );
+            case 'Add Prescription':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625h-5.25m5.25 0v-5.25m-5.25 5.25v5.25" />
+                    </svg>
+                );
+            case 'Add Medication':
+                return (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 2.25H9.75a2.25 2.25 0 00-2.25 2.25v15a2.25 2.25 0 002.25 2.25h4.5a2.25 2.25 0 002.25-2.25v-15a2.25 2.25 0 00-2.25-2.25z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 12h9m-4.5-4.5v9" />
+                    </svg>
+                );
+            default:
+                return <span className="text-xl">+</span>;
+        }
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`bg-[#63D2FF] bg-opacity-80 hover:bg-opacity-100 rounded-xl p-4 flex flex-col items-center justify-center gap-3 transition-colors hover:cursor-pointer active:scale-95 duration-200 ${
+                fullWidth ? 'col-span-2' : ''
+            }`}
+        >
+            <div className="w-12 h-12 rounded-full bg-[#BED8D4] bg-opacity-70 flex items-center justify-center text-[#2081C3]">
+                {getIcon(title)}
+            </div>
+            <span className="text-[#F7F9F9] text-sm font-medium font-k2d text-center leading-tight">
+                {title}
+            </span>
+        </button>
+    );
+};
 
 // ==========================================
 // MAIN NAV COMPONENT
