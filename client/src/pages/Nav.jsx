@@ -848,7 +848,6 @@ function AddPrescriptionView({ closeModal, initialData }) {
                 start_date: med.startDate,
                 end_date: med.endDate,
                 days_taken: med.days,
-
                 first_dose_time: med.takenAtMeals
                     ? (userMealTimes.breakfast.length === 5 ? `${userMealTimes.breakfast}:00` : userMealTimes.breakfast)
                     : (med.startTime.length === 5 ? `${med.startTime}:00` : med.startTime),
@@ -869,6 +868,7 @@ function AddPrescriptionView({ closeModal, initialData }) {
                     doctor_name: docName,
                     doc_specialization: docSpec,
                     date_issued: new Date().toISOString().split('T')[0],
+                    document_url: null,
                     meds_list: formattedMedsList
                 })
             });
