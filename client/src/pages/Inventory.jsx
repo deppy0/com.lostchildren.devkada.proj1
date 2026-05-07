@@ -151,7 +151,7 @@ export default function Inventory() {
 
                                 {/* Top Colored Card Section */}
                                 <div
-                                    className={`relative ${item.color || 'bg-[#FFDFBA]'} rounded-2xl p-4 flex flex-col items-center justify-center h-36 transition-transform duration-200 group-hover:scale-[1.02] border border-[#2081C3]`}
+                                    className={`relative ${item.color || 'bg-[#BED8D4]'} rounded-2xl p-4 flex flex-col items-center justify-center h-36 transition-transform duration-200 group-hover:scale-[1.02] border border-[#2081C3]`}
                                 >
                                     {/* Subtract Quantity Button */}
                                     <button
