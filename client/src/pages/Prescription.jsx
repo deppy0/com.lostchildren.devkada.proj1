@@ -9,7 +9,7 @@ export default function Prescription() {
     const [isLoading, setIsLoading] = useState(true);
 
     // FIX 1: Changed sessionStorage to localStorage to correctly retrieve the token
-    const getToken = () => sessionStorage.getItem('authToken');
+    const getToken = () => localStorage.getItem('authToken');
 
     // Fetch data from the backend when the component mounts
     useEffect(() => {

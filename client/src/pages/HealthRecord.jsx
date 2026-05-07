@@ -6,7 +6,7 @@ const API_BASE_URL = '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
 });
 
 // Reusing the BP Status logic from your Nav to color-code the history list

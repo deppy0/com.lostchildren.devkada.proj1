@@ -14,7 +14,7 @@ const API_BASE_URL = '/server';
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
 });
 
 // Helper function to render an icon based on medicine type

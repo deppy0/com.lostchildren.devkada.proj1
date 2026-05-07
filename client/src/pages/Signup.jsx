@@ -69,10 +69,10 @@ export default function Signup() {
         return;
       }
 
-      // Store the auth token in sessionStorage
+      // Store the auth token in localStorage
       if (result.data?.session?.access_token) {
-        sessionStorage.setItem('authToken', result.data.session.access_token);
-        sessionStorage.setItem('user', JSON.stringify(result.data.user));
+        localStorage.setItem('authToken', result.data.session.access_token);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
       }
 
       nav('/home');

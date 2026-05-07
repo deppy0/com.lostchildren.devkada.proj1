@@ -11,13 +11,10 @@ const API_BASE_URL = '/server';
 // ==========================================
 // SMART AUTH HELPERS
 // ==========================================
-const getToken = () => {
-    let token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    return token ? token.replace(/^"(.*)"$/, '$1') : '';
-};
+const getToken = () => localStorage.getItem('authToken');
 
 const getUser = () => {
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const userStr = localStorage.getItem('user');
     try {
         return userStr ? JSON.parse(userStr) : {};
     } catch (e) {
@@ -31,7 +28,6 @@ const getAuthHeaders = () => ({
 });
 
 const ActionButton = ({ title, fullWidth, onClick }) => {
-    // Helper to return the correct SVG icon based on the button title
     const getIcon = (title) => {
         switch (title) {
             case 'Take Medicine':
@@ -103,6 +99,7 @@ const ActionButton = ({ title, fullWidth, onClick }) => {
 export default function Nav({ activeTab }) {
     const [fabOpen, setFabOpen] = useState(false);
     const [activeModal, setActiveModal] = useState(null);
+    const [scannedData, setScannedData] = useState(null);
     const navigate = useNavigate();
 
     const handleNavigation = (path) => {
@@ -184,21 +181,40 @@ export default function Nav({ activeTab }) {
                     <div className="w-12 h-1.5 bg-white/50 rounded-full absolute top-3"></div>
                     <button
                         onClick={() => setActiveModal(null)}
-                        className="absolute right-4 top-3 w-10 h-10 bg-[#78D5D7] border-2 border-[#BED8D4] rounded-full flex items-center justify-center shadow-lg text-[#F7F9F9] hover:scale-105 active:scale-95 transition-all z-10 hover:cursor-pointer"
+                        className="absolute right-6 top-4 p-2 text-white/70 hover:text-white"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                        ✕
                     </button>
+                    <h3 className="font-semibold text-lg tracking-wide">
+                        {activeModal === 'takeMedicine' && 'Take Medicine'}
+                        {activeModal === 'addMedicine' && 'Restock Inventory'}
+                        {activeModal === 'updateBP' && 'Log BP'}
+                        {activeModal === 'addMedication' && 'Medication Schedule'}
+                        {activeModal === 'scanPrescription' && 'Scan Prescription'}
+                        {activeModal === 'addPrescription' && 'Add Prescription'}
+                    </h3>
                 </div>
 
                 <div className={`flex-1 overflow-y-auto font-k2d ${activeModal === 'scanPrescription' ? 'bg-black' : 'bg-[#F7F9F9]'}`}>
                     {activeModal === 'takeMedicine' && <TakeMedicineView closeModal={() => setActiveModal(null)} />}
                     {activeModal === 'addMedicine' && <AddMedicineView closeModal={() => setActiveModal(null)} />}
-                    {activeModal === 'addMedication' && <AddMedicationView closeModal={() => setActiveModal(null)} />}
-                    {activeModal === 'addPrescription' && <AddPrescriptionView closeModal={() => setActiveModal(null)} />}
                     {activeModal === 'updateBP' && <UpdateBPView closeModal={() => setActiveModal(null)} />}
-                    {activeModal === 'scanPrescription' && <ScanPrescriptionView closeModal={() => setActiveModal(null)} />}
+                    {activeModal === 'addMedication' && <AddMedicationView closeModal={() => setActiveModal(null)} />}
+                    {activeModal === 'scanPrescription' && (
+                        <ScanPrescriptionView
+                            closeModal={() => setActiveModal(null)}
+                            onScanComplete={(parsedData) => {
+                                setScannedData(parsedData);
+                                setActiveModal('addPrescription');
+                            }}
+                        />
+                    )}
+                    {activeModal === 'addPrescription' && (
+                        <AddPrescriptionView
+                            closeModal={() => { setActiveModal(null); setScannedData(null); }}
+                            initialData={scannedData}
+                        />
+                    )}
                 </div>
             </div>
         </>
@@ -659,12 +675,11 @@ function UpdateBPView({ closeModal }) {
     );
 }
 
-function AddPrescriptionView({ closeModal }) {
+function AddPrescriptionView({ closeModal, initialData }) {
     const [step, setStep] = useState(1);
     const [docName, setDocName] = useState('');
     const [docSpec, setDocSpec] = useState('');
 
-    // Upload state with preview
     const [prescriptionImage, setPrescriptionImage] = useState(null);
     const [prescriptionImagePreview, setPrescriptionImagePreview] = useState(null);
 
@@ -682,6 +697,64 @@ function AddPrescriptionView({ closeModal }) {
         startDate: '', endDate: '', days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], takenAtMeals: false,
         notes: ''
     });
+
+    const calculateSchedule = (start, gap, max, atMeals) => {
+        let m = parseInt(max, 10);
+        if (atMeals) {
+            if (isNaN(m) || m <= 0) m = 3;
+            return [userMealTimes.breakfast, userMealTimes.lunch, userMealTimes.dinner].slice(0, m);
+        }
+        if (!start) return [];
+        const times = [start];
+        const g = parseInt(gap, 10);
+        if (g > 0) {
+            if (isNaN(m) || m <= 0) m = Math.floor(24 / g);
+            if (m > 1) {
+                let [hours, minutes] = start.split(':').map(Number);
+                for (let i = 1; i < m; i++) {
+                    const nextHour = (hours + (i * g)) % 24;
+                    times.push(`${nextHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+                }
+            }
+        }
+        return times;
+    };
+
+    // OCR integration effect
+    useEffect(() => {
+        if (initialData) {
+            if (initialData.doctor_name) setDocName(initialData.doctor_name);
+
+            if (initialData.medications && initialData.medications.length > 0) {
+                const mappedMeds = initialData.medications.map(med => {
+                    const sched = med.schedules?.[0] || {};
+                    const startTime = sched.time_of_day ? sched.time_of_day.substring(0, 5) : '08:00';
+                    const hourlyGap = med.hourly_gap || '';
+                    const maxPerDay = med.max_per_day || '';
+                    const takenAtMeals = sched.is_after_meal || false;
+
+                    return {
+                        name: med.name || '',
+                        dosage: med.strength || '',
+                        type: 'Tablet',
+                        totalAmount: med.total_amount_prescribed || '',
+                        startTime: startTime,
+                        hourlyGap: hourlyGap,
+                        maxPerDay: maxPerDay,
+                        startDate: initialData.date_issued || new Date().toISOString().split('T')[0],
+                        endDate: '',
+                        days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+                        takenAtMeals: takenAtMeals,
+                        notes: sched.frequency || '',
+                        calculatedTimes: calculateSchedule(startTime, hourlyGap, maxPerDay, takenAtMeals)
+                    };
+                });
+
+                setPrescriptionMeds(mappedMeds);
+                setStep(2); // Jump to step 2 review
+            }
+        }
+    }, [initialData, userMealTimes]);
 
     useEffect(() => {
         try {
@@ -720,28 +793,6 @@ function AddPrescriptionView({ closeModal }) {
         ...prev,
         days: prev.days.includes(dayId) ? prev.days.filter(d => d !== dayId) : [...prev.days, dayId]
     }));
-
-    const calculateSchedule = (start, gap, max, atMeals) => {
-        let m = parseInt(max, 10);
-        if (atMeals) {
-            if (isNaN(m) || m <= 0) m = 3;
-            return [userMealTimes.breakfast, userMealTimes.lunch, userMealTimes.dinner].slice(0, m);
-        }
-        if (!start) return [];
-        const times = [start];
-        const g = parseInt(gap, 10);
-        if (g > 0) {
-            if (isNaN(m) || m <= 0) m = Math.floor(24 / g);
-            if (m > 1) {
-                let [hours, minutes] = start.split(':').map(Number);
-                for (let i = 1; i < m; i++) {
-                    const nextHour = (hours + (i * g)) % 24;
-                    times.push(`${nextHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
-                }
-            }
-        }
-        return times;
-    };
 
     const formatTimeAMPM = (timeStr) => {
         if (!timeStr) return '';
@@ -791,11 +842,9 @@ function AddPrescriptionView({ closeModal }) {
                 strength: med.dosage,
                 medicine_type: med.type,
                 stock_remaining: parseInt(med.totalAmount, 10) || 0,
-                start_date: med.startDate,
-                end_date: med.endDate,
-                // FIX: Pass the raw strings directly ('sun', 'mon', etc.)
+                start_date: med.startDate < 1 ? null : med.startDate,
+                end_date: med.endDate < 1 ? null : med.endDate,
                 days_taken: med.days,
-
                 first_dose_time: med.takenAtMeals
                     ? (userMealTimes.breakfast.length === 5 ? `${userMealTimes.breakfast}:00` : userMealTimes.breakfast)
                     : (med.startTime.length === 5 ? `${med.startTime}:00` : med.startTime),
@@ -804,7 +853,6 @@ function AddPrescriptionView({ closeModal }) {
                 max_per_day: parseInt(med.maxPerDay, 10) || null,
                 taken_at_meals: med.takenAtMeals,
 
-                // FIX: Mapped to 'notes' directly instead of 'instruction'
                 notes: med.notes && med.notes.trim() !== ''
                     ? med.notes
                     : (med.takenAtMeals ? 'Take with meals' : 'Take as directed')
@@ -817,8 +865,7 @@ function AddPrescriptionView({ closeModal }) {
                     doctor_name: docName,
                     doc_specialization: docSpec,
                     date_issued: new Date().toISOString().split('T')[0],
-                    // Removed explicitly passing null here to avoid database conflicts,
-                    // it will be patched immediately if there is a photo.
+                    document_url: null,
                     meds_list: formattedMedsList
                 })
             });
@@ -1049,7 +1096,7 @@ function AddPrescriptionView({ closeModal }) {
                     </div>
                     <div className="mt-4 pt-4 border-t border-gray-200 bg-white">
                         <button onClick={handleSaveCompletePrescription} disabled={prescriptionMeds.length === 0 || loading} className={`w-full py-4 rounded-xl shadow-lg transition-all text-lg font-semibold ${prescriptionMeds.length > 0 ? 'bg-[#2081C3] text-white active:scale-95 hover:cursor-pointer' : 'bg-gray-300 text-gray-500 disabled:cursor-not-allowed'}`}>
-                            {loading ? 'Saving...' : 'Save Complete Prescription'}
+                            {loading ? 'Saving...' : 'Finish & Save Prescription'}
                         </button>
                     </div>
                 </>
@@ -1058,13 +1105,12 @@ function AddPrescriptionView({ closeModal }) {
     );
 }
 
-function ScanPrescriptionView({ closeModal }) {
+function ScanPrescriptionView({ closeModal, onScanComplete }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
-    const fileInputRef = useState(null)[1];
-    const inputRef = useState(null)[0];
+    const [loading, setLoading] = useState(false);
 
-    useState(() => {
+    useEffect(() => {
         const fileInput = document.getElementById('prescription-file-input');
         if (fileInput) fileInput.click();
     }, []);
@@ -1088,10 +1134,29 @@ function ScanPrescriptionView({ closeModal }) {
         if (fileInput) fileInput.click();
     };
 
-    const handleConfirmUpload = () => {
-        if (selectedFile) {
-            console.log('Uploading prescription:', selectedFile);
-            closeModal();
+    const handleConfirmUpload = async () => {
+        if (!previewUrl) return;
+
+        setLoading(true);
+        try {
+            const base64Data = previewUrl.split(',')[1];
+
+            const response = await fetch('/server/ocr/parse', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ image_base64: base64Data })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Failed to process prescription");
+
+            onScanComplete(data.parsed);
+
+        } catch (error) {
+            console.error('Error scanning prescription:', error);
+            alert(`Could not scan prescription: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -1109,27 +1174,31 @@ function ScanPrescriptionView({ closeModal }) {
                 <div className="flex-1 flex flex-col items-center justify-center gap-6">
                     <div className="w-24 h-24 rounded-full bg-[#63D2FF]/20 flex items-center justify-center">
                         <svg className="w-12 h-12 text-[#63D2FF]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33A3 3 0 0116.5 19.5H6.75z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                         </svg>
                     </div>
                     <div className="text-center">
                         <h3 className="text-white text-lg font-semibold mb-2">Select Prescription Image</h3>
                         <p className="text-white/60 text-sm">
-                            Choose a photo or scan of your prescription.<br/>
-                            MoniMed will automatically extract the details.
+                            Upload a picture to instantly extract details.
                         </p>
                     </div>
                     <button
                         onClick={() => document.getElementById('prescription-file-input').click()}
-                        className="px-8 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg"
+                        className="px-8 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg hover:cursor-pointer"
                     >
                         Browse Files
                     </button>
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col gap-4">
-                    <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden bg-black border-2 border-[#63D2FF]/50">
-                        <img src={previewUrl} alt="Prescription" className="w-full h-full object-contain" />
+                    <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden bg-black border-2 border-[#63D2FF]/50 relative">
+                        <img src={previewUrl} alt="Prescription" className={`w-full h-full object-contain ${loading ? 'opacity-50 blur-sm' : ''}`} />
+                        {loading && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-[#63D2FF] font-semibold text-lg animate-pulse">Analyzing...</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#63D2FF]/30">
@@ -1141,15 +1210,17 @@ function ScanPrescriptionView({ closeModal }) {
                     <div className="flex gap-3">
                         <button
                             onClick={handleClearAndReupload}
-                            className="flex-1 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 active:scale-95 transition-all"
+                            disabled={loading}
+                            className="flex-1 py-3 bg-transparent border border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 active:scale-95 transition-all disabled:opacity-50 hover:cursor-pointer"
                         >
-                            Choose Another
+                            Retake
                         </button>
                         <button
                             onClick={handleConfirmUpload}
-                            className="flex-1 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg"
+                            disabled={loading}
+                            className="flex-1 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg disabled:opacity-50 hover:cursor-pointer"
                         >
-                            Confirm & Upload
+                            {loading ? 'Scanning...' : 'Confirm Upload'}
                         </button>
                     </div>
                 </div>
