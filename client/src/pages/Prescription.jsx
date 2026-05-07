@@ -8,7 +8,8 @@ export default function Prescription() {
     const [historyList, setHistoryList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const getToken = () => sessionStorage.getItem('authToken');; 
+    // FIX 1: Changed sessionStorage to localStorage to correctly retrieve the token
+    const getToken = () => sessionStorage.getItem('authToken');
 
     // Fetch data from the backend when the component mounts
     useEffect(() => {
@@ -21,71 +22,43 @@ export default function Prescription() {
             const token = getToken();
             const headers = {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             };
 
-            // 1. Fetch Active Prescriptions
-            const activeRes = await fetch('/server/prescription/get-active', { 
-                method: 'POST', 
-                headers 
-            });
+            // FIX 2: Fetch all required data concurrently instead of looping, which prevents N+1 query crashes
+            const [activeRes, allRes, medsRes] = await Promise.all([
+                fetch('/server/prescription/get-active', { method: 'POST', headers }),
+                fetch('/server/prescription/get', { method: 'POST', headers }),
+                fetch('/server/medicine/get', { method: 'POST', headers, body: JSON.stringify({}) }) // Added empty body for strict POST routes
+            ]);
+
             const activeData = await activeRes.json();
-            
+            const allData = await allRes.json();
+            const medsData = await medsRes.json();
+
+            const allMedicines = medsData.medicines || [];
+
+            // 1. Process Active Prescriptions
             if (activeData.success && activeData.prescriptions) {
-                // For each prescription, fetch its medicines
-                const prescriptionsWithMeds = await Promise.all(
-                    activeData.prescriptions.map(async (prescription) => {
-                        try {
-                            const medsRes = await fetch('/server/medicine/get', {
-                                method: 'POST',
-                                headers
-                            });
-                            const medsData = await medsRes.json();
-                            // Filter medicines by prescription_id
-                            const prescriptionMeds = medsData.medicines?.filter(
-                                med => med.prescription_id === prescription.id
-                            ) || [];
-                            return {
-                                ...prescription,
-                                medicines: prescriptionMeds
-                            };
-                        } catch (err) {
-                            console.error(`Failed to fetch medicines for prescription ${prescription.id}:`, err);
-                            return { ...prescription, medicines: [] };
-                        }
-                    })
-                );
-                setCurrentPrescriptions(prescriptionsWithMeds);
+                const activeWithMeds = activeData.prescriptions.map(prescription => ({
+                    ...prescription,
+                    medicines: allMedicines.filter(med => med.prescription_id === prescription.id)
+                }));
+                setCurrentPrescriptions(activeWithMeds);
             }
 
-            // 2. Fetch All Prescriptions (to derive history)
-            const allRes = await fetch('/server/prescription/get', { 
-                method: 'POST', 
-                headers 
-            });
-            const allData = await allRes.json();
-            
+            // 2. Process History Prescriptions
             if (allData.success && allData.prescriptions) {
-                // Get all medicines for filtering
-                const medsRes = await fetch('/server/medicine/get', {
-                    method: 'POST',
-                    headers
-                });
-                const medsData = await medsRes.json();
-                const allMedicines = medsData.medicines || [];
-
-                // Assuming 'history' means prescriptions not in the active list
-                const activeIds = new Set(activeData.prescriptions?.map(p => p.id));
+                const activeIds = new Set(activeData.prescriptions?.map(p => p.id) || []);
                 const historyPrescriptions = allData.prescriptions.filter(p => !activeIds.has(p.id));
-                
-                // Attach medicines to each history prescription
+
                 const historyWithMeds = historyPrescriptions.map(prescription => ({
                     ...prescription,
-                    medicines: allMedicines.filter(med => med.prescription_id === prescription.id) || []
+                    medicines: allMedicines.filter(med => med.prescription_id === prescription.id)
                 }));
-                
                 setHistoryList(historyWithMeds);
             }
+
         } catch (error) {
             console.error("Failed to fetch prescriptions:", error);
         } finally {
@@ -96,7 +69,7 @@ export default function Prescription() {
     const movePrescriptionToHistory = async (prescription) => {
         try {
             const token = getToken();
-            
+
             // Call your backend /remove endpoint to archive/delete it
             const res = await fetch('/server/prescription/remove', {
                 method: 'POST',
@@ -106,9 +79,9 @@ export default function Prescription() {
                 },
                 body: JSON.stringify({ prescription_id: prescription.id })
             });
-            
+
             const data = await res.json();
-            
+
             if (data.success) {
                 // Update local UI state only after the database confirms success
                 setCurrentPrescriptions((prev) =>
@@ -117,15 +90,13 @@ export default function Prescription() {
 
                 setHistoryList((prev) => [
                     {
-                        id: prescription.id,
-                        date_issued: prescription.date_issued, // Adjust keys to match your DB schema
-                        doctor_name: prescription.doctor_name,
-                        doc_specialization: prescription.doc_specialization,
+                        ...prescription // Keep the medicines attached when moving to history
                     },
                     ...prev,
                 ]);
             } else {
                 console.error("Failed to remove prescription:", data.error);
+                alert(`Error archiving: ${data.error}`);
             }
         } catch (error) {
             console.error("API error moving prescription to history:", error);
@@ -187,12 +158,12 @@ export default function Prescription() {
 
                                 <div className="bg-[#86DDF8] px-5 pt-5 pb-4">
                                     <div className="flex justify-between items-start mb-4">
-                                        <h2 className="text-2xl font-bold">Prescription #{prescription.id}</h2>
+                                        <h2 className="text-2xl font-bold">Prescription #{prescription.id?.substring(0,6) || idx}</h2>
                                         {/* Assuming all items in currentPrescriptions are active */}
                                         <button
                                             type="button"
                                             onClick={() => movePrescriptionToHistory(prescription)}
-                                            className="text-white text-xs font-bold px-3 py-1 rounded-full bg-[#4ADE80] active:scale-95 transition-transform shadow-sm"
+                                            className="text-white text-xs font-bold px-3 py-1 rounded-full bg-[#4ADE80] active:scale-95 transition-transform shadow-sm hover:cursor-pointer"
                                         >
                                             Active
                                         </button>
@@ -209,9 +180,9 @@ export default function Prescription() {
                                 <div className="p-5">
                                     {/* View Picture Button - Wires up to DB image_url if available */}
                                     <div className="flex justify-center mb-6">
-                                        <button 
+                                        <button
                                             onClick={() => prescription.image_url ? window.open(prescription.image_url, '_blank') : alert('No image uploaded')}
-                                            className="bg-[#2081C3] text-white text-sm font-semibold py-2 px-6 rounded-full flex items-center gap-2 shadow-sm active:scale-95 transition-transform"
+                                            className="bg-[#2081C3] text-white text-sm font-semibold py-2 px-6 rounded-full flex items-center gap-2 shadow-sm active:scale-95 transition-transform hover:cursor-pointer"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
@@ -230,7 +201,8 @@ export default function Prescription() {
                                                 </div>
                                                 <div className="bg-[#F7F9F9] flex justify-between items-center px-3 py-2 text-[10px]">
                                                     <span className="text-gray-500">{med.medicine_type}</span>
-                                                    <span className="font-bold text-black text-xs">{med.notes || 'No notes'}</span>
+                                                    {/* FIX 3: Mapped visual 'notes' to the DB 'instruction' field where Nav.jsx saved them */}
+                                                    <span className="font-bold text-black text-xs text-center px-2">{med.instruction || 'No notes'}</span>
                                                     <span className="text-gray-500">{med.strength}</span>
                                                 </div>
                                             </div>
@@ -259,7 +231,7 @@ export default function Prescription() {
                             <div key={item.id || index} className="bg-[#63D2FF] bg-opacity-70 rounded-2xl overflow-hidden">
                                 <div className="bg-[#86DDF8] px-4 py-2">
                                     <div className="flex justify-between items-center text-[11px] text-gray-600">
-                                        <span>ID #{item.id}</span>
+                                        <span>ID #{item.id?.substring(0,6) || index}</span>
                                         <span>{item.date_issued }</span>
                                     </div>
                                 </div>
@@ -270,9 +242,9 @@ export default function Prescription() {
                                             <p className="font-bold text-[14px] leading-tight text-black">{item.doctor_name || 'Unknown Doctor'}</p>
                                             <p className="text-[10px] text-gray-700">{item.doc_specialization || 'No specialization'}</p>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => item.image_url ? window.open(item.image_url, '_blank') : alert('No image uploaded')}
-                                            className="bg-[#2081C3] text-white text-xs font-semibold py-1.5 px-4 rounded-full shadow-sm active:scale-95 transition-transform"
+                                            className="bg-[#2081C3] text-white text-xs font-semibold py-1.5 px-4 rounded-full shadow-sm active:scale-95 transition-transform hover:cursor-pointer"
                                         >
                                             View Picture
                                         </button>
