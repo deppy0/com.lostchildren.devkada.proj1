@@ -16,8 +16,8 @@ export default function CaregiverInfo() {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const token = sessionStorage.getItem('authToken');
-                const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+                const token = localStorage.getItem('authToken');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
 
                 if (!token || !user?.id) {
                     setError('No auth token or user ID found');
@@ -70,8 +70,8 @@ export default function CaregiverInfo() {
             setSuccess('');
             setUpdating(true);
 
-            const token = sessionStorage.getItem('authToken');
-            const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+            const token = localStorage.getItem('authToken');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
 
             if (!token || !user?.id) {
                 setError('No auth token or user ID found');

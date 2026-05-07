@@ -11,13 +11,10 @@ const API_BASE_URL = '/server';
 // ==========================================
 // SMART AUTH HELPERS
 // ==========================================
-const getToken = () => {
-    let token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    return token ? token.replace(/^"(.*)"$/, '$1') : '';
-};
+const getToken = () => localStorage.getItem('authToken');
 
 const getUser = () => {
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const userStr = localStorage.getItem('user');
     try {
         return userStr ? JSON.parse(userStr) : {};
     } catch (e) {
@@ -845,8 +842,8 @@ function AddPrescriptionView({ closeModal, initialData }) {
                 strength: med.dosage,
                 medicine_type: med.type,
                 stock_remaining: parseInt(med.totalAmount, 10) || 0,
-                start_date: med.startDate,
-                end_date: med.endDate,
+                start_date: med.startDate < 1 ? null : med.startDate,
+                end_date: med.endDate < 1 ? null : med.endDate,
                 days_taken: med.days,
                 first_dose_time: med.takenAtMeals
                     ? (userMealTimes.breakfast.length === 5 ? `${userMealTimes.breakfast}:00` : userMealTimes.breakfast)
