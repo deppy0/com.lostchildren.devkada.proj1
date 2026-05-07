@@ -16,6 +16,14 @@ import ChangePassword from './pages/Change-Password.jsx';
 import NotificationSettings from './pages/Notification-Settings.jsx';
 import Privacy from './pages/Privacy.jsx';
 
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('/sw.js').catch((error) => {
+			console.error('Service worker registration failed:', error);
+		});
+	});
+}
+
 // Define the routing structure
 const router = createBrowserRouter([
 	{

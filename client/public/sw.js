@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-512x512.png'
+  '/Monimed.svg'
 ];
 
 // install Event: Cache the App Shell

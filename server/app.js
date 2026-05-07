@@ -32,6 +32,32 @@ try {
 
 const { sendPushToUser, sendEmailToGuardian } = require('./services/notifService');
 
+// In-memory tracking of sent notifications (cleared daily)
+const notificationState = {
+  pushSent: new Set(), // schedule_id -> sent today
+  emailSent: new Set(), // schedule_id -> sent today
+  lastClear: new Date(),
+};
+
+// Reset tracking at midnight UTC
+function resetNotificationTracking() {
+  const now = new Date();
+  const nextMidnight = new Date(now);
+  nextMidnight.setUTCHours(24, 0, 0, 0);
+  const msUntilMidnight = nextMidnight - now;
+  
+  setTimeout(() => {
+    notificationState.pushSent.clear();
+    notificationState.emailSent.clear();
+    notificationState.lastClear = new Date();
+    console.log('✓ Daily notification tracking reset');
+    resetNotificationTracking(); // reschedule for next midnight
+  }, msUntilMidnight);
+}
+
+// Start the daily reset
+resetNotificationTracking();
+
 // Heartbeat runs every minute
 if (cron) {
   cron.schedule('* * * * *', async () => {
@@ -48,8 +74,11 @@ if (cron) {
         console.error('Error fetching upcoming notifications:', pushError);
       } else {
         pushTasks?.forEach(task => {
-          if (task.push_subscription) {
+          // Send only if not already sent today
+          if (task.push_subscription && !notificationState.pushSent.has(task.schedule_id)) {
             sendPushToUser(task.push_subscription, task.medicine_name, task.notification_type);
+            notificationState.pushSent.add(task.schedule_id);
+            console.log(`✓ Push queued for schedule ${task.schedule_id}`);
           }
         });
       }
@@ -64,8 +93,12 @@ if (cron) {
         console.error('Error fetching guardian alerts:', emailError);
       } else {
         emailAlerts?.forEach(alert => {
-          sendEmailToGuardian(alert);
-          console.log(`Escalated missed dose of ${alert.medicine_name}`);
+          // Send only if not already sent today
+          if (!notificationState.emailSent.has(alert.schedule_id)) {
+            sendEmailToGuardian(alert);
+            notificationState.emailSent.add(alert.schedule_id);
+            console.log(`✓ Email queued for schedule ${alert.schedule_id}: ${alert.medicine_name}`);
+          }
         });
       }
     } catch (error) {
