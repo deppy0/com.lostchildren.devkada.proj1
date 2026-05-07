@@ -843,26 +843,106 @@ function AddPrescriptionView({ closeModal }) {
 }
 
 function ScanPrescriptionView({ closeModal }) {
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const fileInputRef = useState(null)[1];
+    const inputRef = useState(null)[0];
+
+    // Auto-trigger file picker on mount
+    useState(() => {
+        const fileInput = document.getElementById('prescription-file-input');
+        if (fileInput) fileInput.click();
+    }, []);
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setPreviewUrl(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleClearAndReupload = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        const fileInput = document.getElementById('prescription-file-input');
+        if (fileInput) fileInput.click();
+    };
+
+    const handleConfirmUpload = () => {
+        if (selectedFile) {
+            console.log('Uploading prescription:', selectedFile);
+            // TODO: Send file to backend /server/ocr/parse or /server/prescription/add
+            closeModal();
+        }
+    };
+
     return (
-        <div className="flex flex-col h-full relative">
-            <div className="flex-1 flex items-center justify-center pt-8">
-                {/* Scanner Target Box */}
-                <div className="w-4/5 h-3/5 border-2 border-dashed border-[#63D2FF] rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]">
-                    <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#78D5D7] rounded-tl-xl"></div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#78D5D7] rounded-tr-xl"></div>
-                    <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#78D5D7] rounded-bl-xl"></div>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#78D5D7] rounded-br-xl"></div>
+        <div className="flex flex-col h-full p-6 bg-black relative">
+            {/* Hidden File Input */}
+            <input
+                id="prescription-file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
+
+            {!selectedFile ? (
+                // Upload Prompt State
+                <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-[#63D2FF]/20 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-[#63D2FF]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33A3 3 0 0116.5 19.5H6.75z"></path>
+                        </svg>
+                    </div>
+                    <div className="text-center">
+                        <h3 className="text-white text-lg font-semibold mb-2">Select Prescription Image</h3>
+                        <p className="text-white/60 text-sm">
+                            Choose a photo or scan of your prescription.<br/>
+                            MoniMed will automatically extract the details.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => document.getElementById('prescription-file-input').click()}
+                        className="px-8 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg"
+                    >
+                        Browse Files
+                    </button>
                 </div>
-                <p className="absolute bottom-1/4 text-white/80 text-sm font-light text-center w-full px-8">
-                    Align the prescription within the frame.<br/>AI will extract the schedule automatically.
-                </p>
-            </div>
-            {/* Shutter Button area */}
-            <div className="h-32 flex items-center justify-center pb-8 z-10">
-                <button onClick={closeModal} className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
-                    <div className="w-16 h-16 bg-white rounded-full"></div>
-                </button>
-            </div>
+            ) : (
+                // Image Preview State
+                <div className="flex-1 flex flex-col gap-4">
+                    <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden bg-black border-2 border-[#63D2FF]/50">
+                        <img src={previewUrl} alt="Prescription" className="w-full h-full object-contain" />
+                    </div>
+
+                    <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#63D2FF]/30">
+                        <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">File Selected</p>
+                        <p className="text-white font-semibold text-sm truncate">{selectedFile.name}</p>
+                        <p className="text-white/50 text-xs mt-1">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleClearAndReupload}
+                            className="flex-1 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 active:scale-95 transition-all"
+                        >
+                            Choose Another
+                        </button>
+                        <button
+                            onClick={handleConfirmUpload}
+                            className="flex-1 py-3 bg-[#63D2FF] text-black rounded-xl font-semibold hover:bg-[#78D5D7] active:scale-95 transition-all shadow-lg"
+                        >
+                            Confirm & Upload
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
