@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/Monimed.svg'
+  '/icons/Monimed-512.png'
 ];
 
 // install Event: Cache the App Shell
@@ -15,6 +15,8 @@ self.addEventListener('install', (event) => {
 
 // fetch Event: Stale-While-Revalidate
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
