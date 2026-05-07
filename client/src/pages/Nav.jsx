@@ -8,15 +8,27 @@ import profileIcon from '../assets/profileIcon.svg';
 
 const API_BASE_URL = '/server';
 
+// ==========================================
+// SMART AUTH HELPERS
+// ==========================================
+const getToken = () => {
+    let token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return token ? token.replace(/^"(.*)"$/, '$1') : '';
+};
+
+const getUser = () => {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    try {
+        return userStr ? JSON.parse(userStr) : {};
+    } catch (e) {
+        return {};
+    }
+};
+
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${getToken()}`
 });
-
-const dayMap = {
-    'sun': 'Sunday', 'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
-    'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday'
-};
 
 const ActionButton = ({ title, fullWidth, onClick }) => (
     <button
@@ -159,9 +171,8 @@ function TakeMedicineView({ closeModal }) {
             body: JSON.stringify({})
         })
             .then(async res => {
-                // Check if the response is actually OK and has content
                 if (!res.ok) {
-                    const text = await res.text(); // Get raw text instead of forcing JSON
+                    const text = await res.text();
                     throw new Error(`Server Error (${res.status}): ${text}`);
                 }
                 return res.json();
@@ -280,7 +291,6 @@ function AddMedicineView({ closeModal }) {
             .catch(err => console.error("Error fetching inventory:", err));
     }, []);
 
-    // FIX 1: Removed parseInt because IDs are UUID strings
     const selectedMed = inventory.find(m => m.id === selectedMedId) || {};
 
     const handleAddStocks = async () => {
@@ -290,7 +300,7 @@ function AddMedicineView({ closeModal }) {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
-                    medicine_id: selectedMedId, // FIX 2: Send raw string UUID, no parseInt
+                    medicine_id: selectedMedId,
                     add_amount: parseInt(addAmount, 10) || 0
                 })
             });
@@ -318,7 +328,6 @@ function AddMedicineView({ closeModal }) {
                         <select value={selectedMedId} onChange={(e) => setSelectedMedId(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:border-[#2081C3] shadow-sm appearance-none hover:cursor-pointer">
                             <option value="" disabled>Choose medication to restock...</option>
                             {inventory.map(med => (
-                                // FIX 3: Use med.stock_remaining instead of med.stock
                                 <option key={med.id} value={med.id}>{med.name} (Current Stock: {med.stock_remaining})</option>
                             ))}
                         </select>
@@ -331,12 +340,10 @@ function AddMedicineView({ closeModal }) {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                         <label className="text-sm text-gray-500 font-semibold pl-1">Dosage</label>
-                        {/* FIX 4: Use selectedMed.strength */}
                         <input type="text" value={selectedMed.strength || ''} readOnly placeholder="Auto-filled" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 focus:outline-none shadow-sm cursor-not-allowed" />
                     </div>
                     <div className="flex flex-col gap-2">
                         <label className="text-sm text-gray-500 font-semibold pl-1">Type</label>
-                        {/* FIX 5: Use selectedMed.medicine_type */}
                         <input type="text" value={selectedMed.medicine_type || ''} readOnly placeholder="Auto-filled" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 focus:outline-none shadow-sm cursor-not-allowed" />
                     </div>
                 </div>
@@ -390,12 +397,6 @@ function AddMedicationView({ closeModal }) {
     const handleSaveSchedule = async () => {
         setLoading(true);
         try {
-            // FORMAT FIX 1: Map short days to Full Capitalized Days for Database match
-            const formattedDays = selectedDays.map(d => dayMap[d.toLowerCase()] || d);
-
-            // FORMAT FIX 2: Ensure time has seconds appended for strict DBs ("12:00" -> "12:00:00")
-            const formattedTimes = times.map(t => t.length === 5 ? `${t}:00` : t);
-
             const response = await fetch('/server/medicine/add', {
                 method: 'POST',
                 headers: getAuthHeaders(),
@@ -418,7 +419,6 @@ function AddMedicationView({ closeModal }) {
             if (!response.ok || !data.success) throw new Error(data.error || "Backend failed to save schedule.");
 
             closeModal();
-            // FORMAT FIX 3: Add slight delay to give the database time to generate schedule rows before refresh
             setTimeout(() => { window.location.reload(); }, 500);
         } catch (error) {
             console.error("Backend error details:", error);
@@ -445,7 +445,12 @@ function AddMedicationView({ closeModal }) {
                         <label className="text-sm text-gray-500 font-semibold pl-1">Type</label>
                         <div className="relative">
                             <select value={type} onChange={e=>setType(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl appearance-none focus:outline-none focus:border-[#2081C3] shadow-sm text-gray-700 hover:cursor-pointer">
-                                <option>Tablet</option><option>Capsule</option><option>Liquid</option>
+                                <option>Tablet</option>
+                                <option>Pill</option>
+                                <option>Capsule</option>
+                                <option>Syrup</option>
+                                <option>Powder</option>
+                                <option>Inhaler</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
@@ -607,6 +612,11 @@ function AddPrescriptionView({ closeModal }) {
     const [step, setStep] = useState(1);
     const [docName, setDocName] = useState('');
     const [docSpec, setDocSpec] = useState('');
+
+    // Upload state with preview
+    const [prescriptionImage, setPrescriptionImage] = useState(null);
+    const [prescriptionImagePreview, setPrescriptionImagePreview] = useState(null);
+
     const [prescriptionMeds, setPrescriptionMeds] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -618,42 +628,47 @@ function AddPrescriptionView({ closeModal }) {
 
     const [tempMed, setTempMed] = useState({
         name: '', dosage: '', type: 'Tablet', totalAmount: '', startTime: '08:00', hourlyGap: '', maxPerDay: '',
-        startDate: '', endDate: '', days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], takenAtMeals: false
+        startDate: '', endDate: '', days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], takenAtMeals: false,
+        notes: ''
     });
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        fetch('/server/user/information', {
-            method: 'GET',
-            headers: {
-                ...getAuthHeaders(),
-                'x-user-id': user.id
-            }
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.user?.meal_times) {
-                    setUserMealTimes({
-                        breakfast: data.user.meal_times.breakfast || '07:00',
-                        lunch: data.user.meal_times.lunch || '12:00',
-                        dinner: data.user.meal_times.dinner || '18:00'
-                    });
-                }
-            })
-            .catch(err => console.error("Error fetching meal times:", err));
-    }, []);
+        try {
+            const user = getUser();
+            if (!user?.id) return;
 
-    const dayMap = {
-        'sun': 'sun', 'mon': 'mon', 'tue': 'tue', 'wed': 'wed',
-        'thu': 'thu', 'fri': 'fri', 'sat': 'sat'
-    };
+            fetch('/server/user/information', {
+                method: 'GET',
+                headers: { ...getAuthHeaders(), 'x-user-id': user.id }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success && data.user?.meal_times) {
+                        setUserMealTimes({
+                            breakfast: data.user.meal_times.breakfast || '07:00',
+                            lunch: data.user.meal_times.lunch || '12:00',
+                            dinner: data.user.meal_times.dinner || '18:00'
+                        });
+                    }
+                })
+                .catch(err => console.error("Error fetching meal times:", err));
+        } catch (error) {
+            console.error("Failed to parse user data from storage:", error);
+        }
+    }, []);
 
     const daysOfWeek = [
         { id: 'sun', label: 'S' }, { id: 'mon', label: 'M' }, { id: 'tue', label: 'T' },
         { id: 'wed', label: 'W' }, { id: 'thu', label: 'T' }, { id: 'fri', label: 'F' }, { id: 'sat', label: 'S' }
     ];
 
-    const toggleTempMedDay = (dayId) => setTempMed(prev => ({...prev, days: prev.days.includes(dayId) ? prev.days.filter(d => d !== dayId) : [...prev.days, dayId]}));
+    const toggleTempMedDay = (dayId) => setTempMed(prev => ({
+        ...prev,
+        days: prev.days.includes(dayId) ? prev.days.filter(d => d !== dayId) : [...prev.days, dayId]
+    }));
 
     const calculateSchedule = (start, gap, max, atMeals) => {
         let m = parseInt(max, 10);
@@ -687,11 +702,33 @@ function AddPrescriptionView({ closeModal }) {
         return `${hour}:${m} ${ampm}`;
     };
 
+    const handleImageSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            setPrescriptionImage(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setPrescriptionImagePreview(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setPrescriptionImage(null);
+        setPrescriptionImagePreview(null);
+    };
+
     const handleAddMedicineToList = () => {
         if (tempMed.name.trim() !== '') {
             const calculatedTimes = calculateSchedule(tempMed.startTime, tempMed.hourlyGap, tempMed.maxPerDay, tempMed.takenAtMeals);
             setPrescriptionMeds([...prescriptionMeds, { ...tempMed, calculatedTimes }]);
-            setTempMed({ name: '', dosage: '', type: 'Tablet', totalAmount: '', startTime: '08:00', hourlyGap: '', maxPerDay: '', startDate: '', endDate: '', days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], takenAtMeals: false });
+            setTempMed({
+                name: '', dosage: '', type: 'Tablet', totalAmount: '', startTime: '08:00',
+                hourlyGap: '', maxPerDay: '', startDate: '', endDate: '',
+                days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], takenAtMeals: false,
+                notes: ''
+            });
         }
     };
 
@@ -702,14 +739,24 @@ function AddPrescriptionView({ closeModal }) {
                 name: med.name,
                 strength: med.dosage,
                 medicine_type: med.type,
-                total_amount_prescribed: parseInt(med.totalAmount, 10) || 0,
+                stock_remaining: parseInt(med.totalAmount, 10) || 0,
                 start_date: med.startDate,
                 end_date: med.endDate,
-                hourly_gap: med.hourlyGap ? parseInt(med.hourlyGap, 10) : null,
-                max_per_day: med.maxPerDay ? parseInt(med.maxPerDay, 10) : 1,
-                days_taken: med.days.map(d => dayMap[d.toLowerCase()] || d),
-                start_time_per_day: med.startTime ? (med.startTime.length === 5 ? `${med.startTime}:00` : med.startTime) : (med.takenAtMeals ? `${userMealTimes.breakfast}:00` : null),
-                notes: med.notes === '' ? null : med.notes
+                // FIX: Pass the raw strings directly ('sun', 'mon', etc.)
+                days_taken: med.days,
+
+                first_dose_time: med.takenAtMeals
+                    ? (userMealTimes.breakfast.length === 5 ? `${userMealTimes.breakfast}:00` : userMealTimes.breakfast)
+                    : (med.startTime.length === 5 ? `${med.startTime}:00` : med.startTime),
+
+                hourly_gap: parseInt(med.hourlyGap, 10) || null,
+                max_per_day: parseInt(med.maxPerDay, 10) || null,
+                taken_at_meals: med.takenAtMeals,
+
+                // FIX: Mapped to 'notes' directly instead of 'instruction'
+                notes: med.notes && med.notes.trim() !== ''
+                    ? med.notes
+                    : (med.takenAtMeals ? 'Take with meals' : 'Take as directed')
             }));
 
             const response = await fetch(`${API_BASE_URL}/prescription/add`, {
@@ -719,13 +766,30 @@ function AddPrescriptionView({ closeModal }) {
                     doctor_name: docName,
                     doc_specialization: docSpec,
                     date_issued: new Date().toISOString().split('T')[0],
-                    document_url: null,
+                    // Removed explicitly passing null here to avoid database conflicts,
+                    // it will be patched immediately if there is a photo.
                     meds_list: formattedMedsList
                 })
             });
 
             const data = await response.json();
             if (!response.ok || !data.success) throw new Error(data.error || "Failed to save prescription.");
+
+            if (prescriptionImage && data.prescription_id) {
+                const formData = new FormData();
+                formData.append('image', prescriptionImage);
+
+                const imageResponse = await fetch(`${API_BASE_URL}/prescription/${data.prescription_id}/image`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${getToken()}` },
+                    body: formData
+                });
+
+                const imageData = await imageResponse.json();
+                if (!imageResponse.ok || !imageData.success) {
+                    console.error("Failed to upload image, but prescription was saved.");
+                }
+            }
 
             closeModal();
             setTimeout(() => { window.location.reload(); }, 500);
@@ -761,6 +825,45 @@ function AddPrescriptionView({ closeModal }) {
                             <label className="text-sm text-gray-500 font-semibold pl-1">Specialization</label>
                             <input type="text" value={docSpec} onChange={e=>setDocSpec(e.target.value)} placeholder="Cardiology" className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-[#2081C3]" />
                         </div>
+
+                        <div className="flex flex-col gap-2 pt-2">
+                            <label className="text-sm text-gray-500 font-semibold pl-1">Prescription Photo (Optional)</label>
+
+                            {!prescriptionImagePreview ? (
+                                <label className="flex flex-col items-center justify-center w-full h-32 bg-white border-2 border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
+                                    <div className="w-10 h-10 rounded-full bg-[#63D2FF]/20 flex items-center justify-center mb-2">
+                                        <svg className="w-5 h-5 text-[#2081C3]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33A3 3 0 0116.5 19.5H6.75z"></path>
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm text-[#2081C3] font-semibold">+ Upload Document/Photo</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageSelect}
+                                        className="hidden"
+                                    />
+                                </label>
+                            ) : (
+                                <div className="flex flex-col gap-3 p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                    <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                                        <img src={prescriptionImagePreview} alt="Preview" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex flex-col overflow-hidden pr-2">
+                                            <span className="text-xs font-semibold text-gray-800 truncate">{prescriptionImage.name}</span>
+                                            <span className="text-[10px] text-gray-500">{(prescriptionImage.size / 1024).toFixed(2)} KB</span>
+                                        </div>
+                                        <button
+                                            onClick={handleRemoveImage}
+                                            className="px-3 py-1.5 text-xs font-semibold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors shrink-0 cursor-pointer"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="mt-8 pt-2">
                         <button onClick={() => setStep(2)} className="w-full py-4 bg-[#2081C3] text-white rounded-xl shadow-lg active:scale-95 transition-all text-lg font-semibold hover:cursor-pointer">Proceed to Add Medicines</button>
@@ -778,7 +881,7 @@ function AddPrescriptionView({ closeModal }) {
                                     <div key={idx} className="bg-[#E8F4FA] border border-[#2081C3]/30 p-3 rounded-xl flex justify-between items-center">
                                         <div>
                                             <p className="font-semibold text-gray-900">{med.name}</p>
-                                            <p className="text-xs text-gray-600">{med.dosage} • {med.type} • Total: {med.totalAmount}</p>
+                                            <p className="text-xs text-gray-600">{med.dosage} • {med.type} • Stock: {med.totalAmount}</p>
                                             <p className="text-xs font-semibold text-[#2081C3] mt-1">
                                                 {med.takenAtMeals ? `With ${med.calculatedTimes.length} Meal(s)` : med.calculatedTimes.map(formatTimeAMPM).join(', ')}
                                             </p>
@@ -802,7 +905,12 @@ function AddPrescriptionView({ closeModal }) {
                                     <input type="text" placeholder="Dosage (e.g. 500mg)" value={tempMed.dosage} onChange={(e) => setTempMed({...tempMed, dosage: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#2081C3] shadow-sm text-gray-700" />
                                     <div className="relative">
                                         <select value={tempMed.type} onChange={(e) => setTempMed({...tempMed, type: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl appearance-none focus:outline-none focus:border-[#2081C3] text-gray-700 hover:cursor-pointer">
-                                            <option>Tablet</option><option>Capsule</option><option>Powder</option><option>Liquid</option>
+                                            <option>Tablet</option>
+                                            <option>Pill</option>
+                                            <option>Capsule</option>
+                                            <option>Syrup</option>
+                                            <option>Powder</option>
+                                            <option>Inhaler</option>
                                         </select>
                                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
@@ -810,7 +918,7 @@ function AddPrescriptionView({ closeModal }) {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-1 mt-1">
-                                    <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider pl-1">Total Prescribed Amount</label>
+                                    <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider pl-1">Initial Stock (Quantity)</label>
                                     <input type="number" placeholder="e.g. 30 pieces" value={tempMed.totalAmount} onChange={(e) => setTempMed({...tempMed, totalAmount: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#2081C3] shadow-sm text-gray-700" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 mt-1">
@@ -843,7 +951,7 @@ function AddPrescriptionView({ closeModal }) {
                                             setTempMed({
                                                 ...tempMed,
                                                 takenAtMeals: isChecked,
-                                                notes: isChecked ? "Should be taken at meal times" : tempMed.notes //
+                                                notes: isChecked ? "Should be taken at meal times" : tempMed.notes
                                             });
                                         }}
                                         className="w-4 h-4 text-[#2081C3] bg-gray-50 border-gray-300 rounded focus:ring-[#2081C3] cursor-pointer"
@@ -851,7 +959,6 @@ function AddPrescriptionView({ closeModal }) {
                                     <label htmlFor="takenAtMeals" className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">Taken at meals</label>
                                 </div>
 
-                                {/* Editable Notes Field */}
                                 <div className="flex flex-col gap-2 pt-1">
                                     <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider pl-1">Special Instructions / Notes</label>
                                     <textarea
@@ -873,7 +980,7 @@ function AddPrescriptionView({ closeModal }) {
                                         <input type="number" placeholder="e.g. 8" value={tempMed.hourlyGap} onChange={(e) => setTempMed({...tempMed, hourlyGap: e.target.value})} disabled={tempMed.takenAtMeals} className={`w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#2081C3] ${tempMed.takenAtMeals ? 'opacity-40 cursor-not-allowed' : 'shadow-sm'}`} />
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider pl-1">Max / Day</label>
+                                        <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider pl-1">Doses per Day</label>
                                         <input type="number" placeholder="e.g. 3" value={tempMed.maxPerDay} onChange={(e) => setTempMed({...tempMed, maxPerDay: e.target.value})} className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#2081C3] shadow-sm text-gray-700" />
                                     </div>
                                 </div>
@@ -906,7 +1013,6 @@ function ScanPrescriptionView({ closeModal }) {
     const fileInputRef = useState(null)[1];
     const inputRef = useState(null)[0];
 
-    // Auto-trigger file picker on mount
     useState(() => {
         const fileInput = document.getElementById('prescription-file-input');
         if (fileInput) fileInput.click();
@@ -934,14 +1040,12 @@ function ScanPrescriptionView({ closeModal }) {
     const handleConfirmUpload = () => {
         if (selectedFile) {
             console.log('Uploading prescription:', selectedFile);
-            // TODO: Send file to backend /server/ocr/parse or /server/prescription/add
             closeModal();
         }
     };
 
     return (
         <div className="flex flex-col h-full p-6 bg-black relative">
-            {/* Hidden File Input */}
             <input
                 id="prescription-file-input"
                 type="file"
@@ -951,7 +1055,6 @@ function ScanPrescriptionView({ closeModal }) {
             />
 
             {!selectedFile ? (
-                // Upload Prompt State
                 <div className="flex-1 flex flex-col items-center justify-center gap-6">
                     <div className="w-24 h-24 rounded-full bg-[#63D2FF]/20 flex items-center justify-center">
                         <svg className="w-12 h-12 text-[#63D2FF]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -973,7 +1076,6 @@ function ScanPrescriptionView({ closeModal }) {
                     </button>
                 </div>
             ) : (
-                // Image Preview State
                 <div className="flex-1 flex flex-col gap-4">
                     <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden bg-black border-2 border-[#63D2FF]/50">
                         <img src={previewUrl} alt="Prescription" className="w-full h-full object-contain" />
