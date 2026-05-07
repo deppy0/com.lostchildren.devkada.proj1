@@ -1,6 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import '../css/Home.css';
 import '../css/Font.css';
+
+// Import icons from assets folder
+import capsuleIcon from '../assets/capsule_icon.png';
+import inhalerIcon from '../assets/inhaler_icon.png';
+import pillIcon from '../assets/pill_icon.png';
+import tabletIcon from '../assets/tablet_icon.png';
+import syrupIcon from '../assets/syrup_icon.png';
+import powderIcon from '../assets/powder_icon.png';
 
 const API_BASE_URL = '/server';
 
@@ -8,6 +16,65 @@ const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
 });
+
+// Helper function to render an icon based on medicine type
+const getMedicineIcon = (type) => {
+    const medType = (type || '').toLowerCase();
+
+    if (medType.includes('capsule')) {
+        return <img src={capsuleIcon} alt="Capsule" className="w-8 h-8 object-contain" />;
+    }
+    if (medType.includes('inhaler')) {
+        return <img src={inhalerIcon} alt="Inhaler" className="w-8 h-8 object-contain" />;
+    }
+    if (medType.includes('pill')) {
+        return <img src={pillIcon} alt="Pill" className="w-8 h-8 object-contain" />;
+    }
+    if (medType.includes('tablet')) {
+        return <img src={tabletIcon} alt="Tablet" className="w-8 h-8 object-contain" />;
+    }
+    if (medType.includes('syrup') || medType.includes('liquid') || medType.includes('drops')) {
+        return <img src={syrupIcon} alt="Syrup" className="w-8 h-8 object-contain" />;
+    }
+    if (medType.includes('powder')) {
+        return <img src={powderIcon} alt="Powder" className="w-8 h-8 object-contain" />;
+    }
+
+    // Default generic medical/cross icon fallback
+    return (
+        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+    );
+};
+
+// Helper function to format strength with units
+const formatStrength = (strength, type) => {
+    if (!strength) return '';
+    const medType = (type || '').toLowerCase();
+    const strStrength = String(strength).toLowerCase();
+
+    let unit = '';
+    if ((medType.includes('syrup') || medType.includes('liquid') || medType.includes('drops')) && !strStrength.includes('ml')) {
+        unit = 'ml';
+    } else if (medType.includes('powder') && !strStrength.includes('mg')) {
+        unit = 'mg';
+    }
+
+    return `(${strength}${unit})`;
+};
+
+// Helper function to determine the appropriate stock unit display
+const getStockUnit = (type) => {
+    const medType = (type || '').toLowerCase();
+    if (medType.includes('syrup') || medType.includes('liquid') || medType.includes('drops')) {
+        return 'ml';
+    }
+    if (medType.includes('powder')) {
+        return 'mg';
+    }
+    return '';
+};
 
 export default function Inventory() {
     const [inventoryItems, setInventoryItems] = useState([]);
@@ -18,8 +85,8 @@ export default function Inventory() {
     const [subtractAmount, setSubtractAmount] = useState('1');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 1. Fetch inventory on mount
-    const fetchInventory = async () => {
+    // 1. Fetch inventory on mount (wrapped in useCallback to fix ESLint warning)
+    const fetchInventory = useCallback(async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/medicine/get`, {
                 method: 'POST',
@@ -34,19 +101,19 @@ export default function Inventory() {
         } catch (error) {
             console.error("Error fetching inventory:", error);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchInventory();
-    }, []);
+    }, [fetchInventory]);
 
     // 2. Open the Slide Modal
     const handleOpenModal = (e, item) => {
-        e.stopPropagation(); // Prevents clicking the card background
+        e.stopPropagation();
         if ((item.stock_remaining || 0) <= 0) return;
 
         setSelectedItem(item);
-        setSubtractAmount('1'); // Reset to default 1 when opening
+        setSubtractAmount('1');
     };
 
     // 3. Confirm and Send to Backend
@@ -95,7 +162,6 @@ export default function Inventory() {
                 throw new Error(data.error || "Failed to subtract stock");
             }
 
-            // Close modal on success
             setSelectedItem(null);
         } catch (error) {
             console.error("Error subtracting stock:", error);
@@ -105,29 +171,20 @@ export default function Inventory() {
         }
     };
 
-    // Filter items based on search
     const filteredInventory = inventoryItems.filter(item =>
         item.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Get today's date formatted nicely for the header
     const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
     return (
-        // Main App Container: Locks to mobile width and viewport height
         <div className="relative mx-auto w-full max-w-md h-[100dvh] bg-[#F7F9F9] overflow-hidden font-k2d text-gray-900">
-
-            {/* Scrollable Content Area */}
             <div className="h-full overflow-y-auto pb-32">
-
-                {/* --- Header Section --- */}
                 <div className="bg-[#2081C3] pt-12 pb-8 px-6 rounded-b-[2rem] shadow-sm">
                     <p className="text-white/80 text-sm font-k2d font-extralight mb-1">{todayFormatted}</p>
                     <h1 className="text-white text-[2.5rem] font-k2d font-semibold mb-6 tracking-wide leading-none">
                         Inventory
                     </h1>
-
-                    {/* Search Bar */}
                     <div className="relative">
                         <input
                             type="text"
@@ -139,7 +196,6 @@ export default function Inventory() {
                     </div>
                 </div>
 
-                {/* --- Inventory Grid --- */}
                 <div className="p-6 grid grid-cols-2 gap-x-4 gap-y-6">
                     {filteredInventory.length === 0 ? (
                         <div className="col-span-2 text-center text-gray-500 py-8 font-k2d font-light">
@@ -148,12 +204,9 @@ export default function Inventory() {
                     ) : (
                         filteredInventory.map((item) => (
                             <div key={item.id} className="flex flex-col cursor-pointer group">
-
-                                {/* Top Colored Card Section */}
                                 <div
                                     className={`relative ${item.color || 'bg-[#BED8D4]'} rounded-2xl p-4 flex flex-col items-center justify-center h-36 transition-transform duration-200 group-hover:scale-[1.02] border border-[#2081C3]`}
                                 >
-                                    {/* Subtract Quantity Button */}
                                     <button
                                         onClick={(e) => handleOpenModal(e, item)}
                                         disabled={(item.stock_remaining || 0) <= 0}
@@ -163,23 +216,24 @@ export default function Inventory() {
                                         -
                                     </button>
 
-                                    {/* Dark Gray Circle Placeholder for Icon/Image */}
-                                    <div className="w-14 h-14 rounded-full bg-gray-500/80 mb-3"></div>
-                                    <span className="text-xl font-k2d font-semibold text-gray-800 leading-none mb-1">
-                                        {item.stock_remaining || 0}
+                                    {/* Icon Container replacing solid gray box */}
+                                    <div className="w-14 h-14 rounded-full bg-[#2081C3]/90 flex items-center justify-center mb-3 shadow-inner">
+                                        {getMedicineIcon(item.medicine_type)}
+                                    </div>
+
+                                    <span className="text-xl font-k2d font-semibold text-gray-800 leading-none mb-1 flex items-baseline gap-0.5">
+                                        {item.stock_remaining || 0} <span className="text-[13px]">{getStockUnit(item.medicine_type)}</span>
                                     </span>
                                     <span className="text-[10px] font-k2d font-extralight text-gray-500 uppercase tracking-wider">
                                         in stock
                                     </span>
                                 </div>
-
-                                {/* Bottom Text Details */}
                                 <div className="pt-2 px-1">
                                     <h3 className="font-k2d font-semibold text-gray-900 text-lg leading-tight mb-0.5 capitalize">
                                         {item.name}
                                     </h3>
                                     <p className="text-[11px] font-k2d font-extralight text-gray-500 capitalize">
-                                        {item.medicine_type || 'Unknown'} {item.strength ? `(${item.strength})` : ''}
+                                        {item.medicine_type || 'Unknown'} {formatStrength(item.strength, item.medicine_type)}
                                     </p>
                                 </div>
                             </div>
@@ -188,22 +242,14 @@ export default function Inventory() {
                 </div>
             </div>
 
-            {/* ========================================== */}
-            {/* SLIDING MODAL UI (Matches Nav.jsx exactly) */}
-            {/* ========================================== */}
-
-            {/* Modal Overlay Background */}
             <div
                 className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 ${selectedItem ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setSelectedItem(null)}
             />
 
-            {/* Modal Container */}
             <div className={`fixed bottom-0 inset-x-0 w-full max-w-md mx-auto bg-white rounded-t-3xl z-[1001] transition-transform duration-500 ease-in-out shadow-[0_-10px_40px_rgba(0,0,0,0.2)] flex flex-col ${
                 selectedItem ? 'translate-y-0' : 'translate-y-full'
             }`}>
-
-                {/* Modal Header */}
                 <div className={`w-full flex justify-center pt-5 pb-5 rounded-t-3xl relative bg-[#2081C3] text-white`}>
                     <div className="w-12 h-1.5 bg-white/50 rounded-full absolute top-3"></div>
                     <button
@@ -216,12 +262,11 @@ export default function Inventory() {
                     </button>
                 </div>
 
-                {/* Modal Body */}
                 <div className="p-6 flex flex-col gap-4 font-k2d pb-10 bg-[#F7F9F9]">
                     <div>
                         <h2 className="text-2xl font-semibold text-[#2081C3] capitalize">{selectedItem?.name}</h2>
                         <p className="text-sm text-gray-500 font-semibold">
-                            Current Stock: <span className="text-gray-800">{selectedItem?.stock_remaining}</span>
+                            Current Stock: <span className="text-gray-800">{selectedItem?.stock_remaining} {getStockUnit(selectedItem?.medicine_type)}</span>
                         </p>
                     </div>
 
@@ -233,7 +278,7 @@ export default function Inventory() {
                             max={selectedItem?.stock_remaining}
                             value={subtractAmount}
                             onChange={(e) => setSubtractAmount(e.target.value)}
-                            placeholder="e.g. 1 or 5"
+                            placeholder={`e.g. 1 or 5 ${getStockUnit(selectedItem?.medicine_type)}`}
                             className="w-full px-4 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 font-semibold focus:outline-none focus:border-[#2081C3] shadow-sm"
                         />
                     </div>
